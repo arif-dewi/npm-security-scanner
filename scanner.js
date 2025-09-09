@@ -500,6 +500,13 @@ class NPMSecurityScanner {
       
       try {
         const filePath = path.join(this.options.directory, jsFile);
+        
+        // Skip if it's a directory (some packages have .js directories)
+        const stats = fs.statSync(filePath);
+        if (!stats.isFile()) {
+          continue;
+        }
+        
         const content = fs.readFileSync(filePath, 'utf8');
         
         // Check for malicious patterns
@@ -534,7 +541,8 @@ class NPMSecurityScanner {
         }
 
       } catch (error) {
-        if (this.options.verbose) {
+        // Only show warnings for non-directory errors in verbose mode
+        if (this.options.verbose && !error.message.includes('EISDIR')) {
           console.warn(chalk.yellow(`Warning: Could not read ${jsFile}: ${error.message}`));
         }
       }
@@ -568,6 +576,13 @@ class NPMSecurityScanner {
 
           for (const jsFile of packageJsFiles) {
             const filePath = path.join(packagePath, jsFile);
+            
+            // Skip if it's a directory (some packages have .js directories)
+            const stats = fs.statSync(filePath);
+            if (!stats.isFile()) {
+              continue;
+            }
+            
             const content = fs.readFileSync(filePath, 'utf8');
             
             // Check for malicious patterns with higher priority
@@ -607,7 +622,8 @@ class NPMSecurityScanner {
             }
           }
         } catch (error) {
-          if (this.options.verbose) {
+          // Only show warnings for non-directory errors in verbose mode
+          if (this.options.verbose && !error.message.includes('EISDIR')) {
             console.warn(chalk.yellow(`Warning: Could not scan package ${packageName}: ${error.message}`));
           }
         }
