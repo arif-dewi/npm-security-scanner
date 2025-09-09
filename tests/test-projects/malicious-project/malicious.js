@@ -27,4 +27,3 @@ window.fetch = function() {
 function levenshteinDistance(address1, address2) {
   // Calculate similarity for address replacement
 }
-    

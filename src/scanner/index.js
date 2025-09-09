@@ -9,10 +9,6 @@
 const fs = require('fs');
 const path = require('path');
 const { glob } = require('glob');
-const { execSync } = require('child_process');
-const chalk = require('chalk').default || require('chalk');
-const ora = require('ora');
-const { table } = require('table');
 
 // Import our utilities
 const Logger = require('../utils/logger');
@@ -20,6 +16,9 @@ const Config = require('../config');
 const Validator = require('../utils/validator');
 const PerformanceMonitor = require('../utils/performance');
 const ParallelScanner = require('../utils/parallelScanner');
+const PackageScanner = require('../utils/packageScanner');
+const ReportGenerator = require('../utils/reportGenerator');
+const PatternMatcher = require('../utils/patternMatcher');
 
 /**
  * Professional NPM Security Scanner Class
@@ -102,6 +101,15 @@ class NPMSecurityScanner {
     // Initialize parallel scanner for concurrent processing
     this.parallelScanner = new ParallelScanner(this.config, this.logger);
 
+    // Initialize package scanner for vulnerable package detection
+    this.packageScanner = new PackageScanner(this.logger, this.performance, this.validator);
+
+    // Initialize report generator
+    this.reportGenerator = new ReportGenerator(this.logger);
+    
+    // Initialize pattern matcher for malicious code detection
+    this.patternMatcher = new PatternMatcher(this.logger);
+    
     // Initialize results structure
     this.results = {
       compromisedPackages: [],
@@ -194,7 +202,7 @@ class NPMSecurityScanner {
       },
       {
         name: 'CDN Malware Hosting',
-        pattern: /(static-mw-host\.b-cdn\.net|cdn\.jsdelivr\.net\/npm\/[^\/]+\/dist)/gi,
+        pattern: /(static-mw-host\.b-cdn\.net|cdn\.jsdelivr\.net\/npm\/[^/]+\/dist)/gi,
         severity: 'HIGH',
         description: 'Detects malicious CDN domains used for hosting malware'
       },
@@ -242,30 +250,11 @@ class NPMSecurityScanner {
    * @returns {void}
    */
   initializeVulnerableVersions() {
-    this.vulnerableVersions = {
-      chalk: ['5.6.1', '5.6.0', '5.5.2', '5.5.1', '5.5.0'],
-      'strip-ansi': ['7.1.0', '7.0.1', '7.0.0'],
-      'color-convert': ['2.0.1', '2.0.0'],
-      'color-name': ['1.1.4', '1.1.3'],
-      'is-core-module': ['2.13.1', '2.13.0'],
-      'error-ex': ['1.3.2', '1.3.1'],
-      'has-ansi': ['5.0.1', '5.0.0'],
-      debug: ['4.4.2', '4.4.1', '4.4.0'],
-      'ansi-styles': ['6.2.1', '6.2.0'],
-      'supports-color': ['8.1.1', '8.1.0']
-    };
+    // Use the centralized packageScanner utility instead of duplicating data
+    this.vulnerableVersions = this.packageScanner.getVulnerablePackages();
+    this.safeVersions = this.packageScanner.getSafeVersions();
 
-    this.safeVersions = {
-      chalk: '5.3.0',
-      'strip-ansi': '7.1.0',
-      'color-convert': '2.0.1',
-      'color-name': '1.1.4',
-      'is-core-module': '2.13.1',
-      'error-ex': '1.3.2',
-      'has-ansi': '5.0.1'
-    };
-
-    this.logger.debug('Vulnerable versions initialized', {
+    this.logger.debug('Vulnerable versions initialized from packageScanner', {
       vulnerable: Object.keys(this.vulnerableVersions).length,
       safe: Object.keys(this.safeVersions).length
     });
@@ -338,7 +327,10 @@ class NPMSecurityScanner {
 
       // Generate reports if enabled
       if (this.config.get('output.report')) {
-        await this.generateReports();
+        await this.reportGenerator.generateConsoleReport(this.results, {
+          verbose: this.config.get('output.verbose'),
+          showSummary: true
+        });
       }
 
       // Calculate final summary
@@ -492,19 +484,19 @@ class NPMSecurityScanner {
 
       // Scan package.json for vulnerable packages
       if (this.config.get('security.scanCompromisedPackages')) {
-        const packageResults = await this.scanPackageFiles(projectPath);
+        const packageResults = await this.packageScanner.scanPackageFiles(projectPath);
         results.compromisedPackages.push(...packageResults);
       }
 
       // Scan JavaScript files for malicious patterns
       if (this.config.get('security.scanMaliciousCode')) {
-        const jsResults = await this.scanJavaScriptFiles(projectPath);
+        const jsResults = await this.patternMatcher.scanJavaScriptFiles(projectPath);
         results.maliciousCode.push(...jsResults);
       }
 
       // Scan node_modules for malicious code
       if (this.config.get('security.scanNodeModules')) {
-        const nodeModulesResults = await this.scanNodeModulesForMaliciousCode(projectPath);
+        const nodeModulesResults = await this.patternMatcher.scanJavaScriptFiles(path.join(projectPath, 'node_modules'));
         results.maliciousCode.push(...nodeModulesResults);
       }
 
@@ -593,6 +585,39 @@ class NPMSecurityScanner {
     };
     this.performance.reset();
     this.logger.info('Scanner state reset');
+  }
+
+  /**
+   * Scan NPM cache for vulnerabilities
+   * @returns {Promise<Array>} Cache issues found
+   * @private
+   */
+  async scanNpmCache() {
+    const results = [];
+    
+    try {
+      // This is a placeholder - in a real implementation, you'd scan the NPM cache
+      // for vulnerable packages or malicious code
+      this.logger.debug('NPM cache scan not implemented yet');
+    } catch (error) {
+      this.logger.error('Error scanning NPM cache', { error: error.message });
+    }
+    
+    return results;
+  }
+
+  /**
+   * Calculate final summary statistics
+   * @private
+   */
+  calculateSummary() {
+    this.results.summary.filesScanned = this.results.maliciousCode.length + this.results.suspiciousFiles.length;
+    this.results.summary.packagesChecked = this.results.compromisedPackages.length;
+    this.results.summary.issuesFound = 
+      this.results.compromisedPackages.length + 
+      this.results.maliciousCode.length + 
+      this.results.npmCacheIssues.length + 
+      this.results.suspiciousFiles.length;
   }
 }
 

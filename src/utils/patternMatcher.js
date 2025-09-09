@@ -1,0 +1,207 @@
+/**
+ * Pattern matching utilities for security scanning
+ * Handles malicious code pattern detection and validation
+ */
+
+class PatternMatcher {
+  constructor(logger) {
+    this.logger = logger;
+    this.patterns = this.initializePatterns();
+  }
+
+  /**
+   * Initialize malicious code patterns
+   * @returns {Array} Array of pattern objects
+   * @private
+   */
+  initializePatterns() {
+    return [
+      {
+        name: 'Ethereum Wallet Hook',
+        pattern: /checkethereumw|window\.ethereum\.(request|send|sendAsync)/gi,
+        severity: 'HIGH',
+        description: 'Detects the main malicious function that hooks into Ethereum wallets'
+      },
+      {
+        name: 'Crypto Address Replacement',
+        pattern: /0x[a-fA-F0-9]{40}/g,
+        severity: 'HIGH',
+        description: 'Detects hardcoded malicious Ethereum address used for fund theft'
+      },
+      {
+        name: 'WebSocket Data Exfiltration',
+        pattern: /new\s+WebSocket\s*\(\s*['"`][^'"`]*['"`]\s*\)/gi,
+        severity: 'HIGH',
+        description: 'Detects malicious WebSocket endpoint for data exfiltration'
+      },
+      {
+        name: 'CDN Malware Hosting',
+        pattern: /(static-mw-host\.b-cdn\.net|cdn\.jsdelivr\.net\/npm\/[^\/]+\/dist)/gi,
+        severity: 'HIGH',
+        description: 'Detects malicious CDN domains used for hosting malware'
+      },
+      {
+        name: 'Fake NPM Domain',
+        pattern: /npmjs\.help|npmjs\.org\.help/gi,
+        severity: 'MEDIUM',
+        description: 'Detects fake NPM domain used in phishing attacks'
+      },
+      {
+        name: 'Fetch/XMLHttpRequest Override',
+        pattern: /(window\.fetch\s*=|XMLHttpRequest\.prototype\.(open|send)\s*=)/gi,
+        severity: 'HIGH',
+        description: 'Detects malicious override of network request functions'
+      },
+      {
+        name: 'Malicious Network Interception',
+        pattern: /(originalFetch|originalOpen|originalSend).*\.(fetch|XMLHttpRequest).*replace/gi,
+        severity: 'HIGH',
+        description: 'Detects malicious network request interception patterns'
+      },
+      {
+        name: 'Levenshtein Distance Calculation',
+        pattern: /levenshtein.*distance.*address|address.*levenshtein.*distance.*replace/gi,
+        severity: 'LOW',
+        description: 'Detects potential address similarity calculation for replacement'
+      }
+    ];
+  }
+
+  /**
+   * Scan JavaScript files in a project for malicious patterns
+   * @param {string} projectPath - Path to the project
+   * @returns {Promise<Array>} Array of detected issues
+   */
+  async scanJavaScriptFiles(projectPath) {
+    const fs = require('fs');
+    const path = require('path');
+    const { glob } = require('glob');
+    
+    const results = [];
+    
+    try {
+      // Find all JavaScript files
+      const jsFiles = await glob('**/*.js', {
+        cwd: projectPath,
+        ignore: ['node_modules/**', '*.min.js', 'coverage/**', 'dist/**', 'build/**']
+      });
+      
+      for (const file of jsFiles) {
+        const filePath = path.join(projectPath, file);
+        
+        try {
+          const content = fs.readFileSync(filePath, 'utf8');
+          const issues = this.scanFileContent(content, filePath, path.basename(projectPath));
+          results.push(...issues);
+        } catch (error) {
+          this.logger.debug('Error reading file', { file: filePath, error: error.message });
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error scanning JavaScript files', { projectPath, error: error.message });
+    }
+    
+    return results;
+  }
+
+  /**
+   * Scan file content for malicious patterns
+   * @param {string} content - File content
+   * @param {string} filePath - File path
+   * @param {string} projectName - Project name
+   * @param {Object} iocs - Indicators of Compromise
+   * @returns {Array} Array of malicious patterns found
+   */
+  scanFileContent(content, filePath, projectName, iocs = {}) {
+    const maliciousCode = [];
+
+    // Check against known patterns
+    for (const pattern of this.patterns) {
+      const matches = content.match(pattern.pattern);
+      if (matches) {
+        const lines = content.split('\n');
+        const matchLines = matches.map(match => {
+          const lineIndex = lines.findIndex(line => line.includes(match));
+          return lineIndex + 1;
+        });
+
+        maliciousCode.push({
+          project: projectName,
+          file: require('path').basename(filePath),
+          pattern: pattern.name,
+          severity: pattern.severity,
+          description: pattern.description,
+          matches: matches.length,
+          lines: matchLines
+        });
+      }
+    }
+
+    // Check for suspicious addresses
+    const addressPattern = /0x[a-fA-F0-9]{40}/g;
+    const addresses = content.match(addressPattern);
+    if (addresses) {
+      for (const address of addresses) {
+        if (this.isSuspiciousAddress(address, iocs)) {
+          maliciousCode.push({
+            project: projectName,
+            file: require('path').basename(filePath),
+            pattern: 'Suspicious Address',
+            severity: 'HIGH',
+            description: `Suspicious crypto address found: ${address}`,
+            matches: 1,
+            lines: [content.split('\n').findIndex(line => line.includes(address)) + 1]
+          });
+        }
+      }
+    }
+
+    return maliciousCode;
+  }
+
+  /**
+   * Check if address is suspicious
+   * @param {string} address - Address to check
+   * @param {Object} iocs - Indicators of Compromise
+   * @returns {boolean} Whether address is suspicious
+   * @private
+   */
+  isSuspiciousAddress(address, iocs) {
+    if (!iocs.cryptoAddresses) return false;
+    return iocs.cryptoAddresses.includes(address.toLowerCase());
+  }
+
+  /**
+   * Get all patterns
+   * @returns {Array} Array of pattern objects
+   */
+  getPatterns() {
+    return this.patterns;
+  }
+
+  /**
+   * Add custom pattern
+   * @param {Object} pattern - Pattern object
+   */
+  addPattern(pattern) {
+    this.patterns.push(pattern);
+    this.logger.debug('Custom pattern added', { name: pattern.name });
+  }
+
+  /**
+   * Remove pattern by name
+   * @param {string} name - Pattern name
+   * @returns {boolean} Whether pattern was removed
+   */
+  removePattern(name) {
+    const index = this.patterns.findIndex(p => p.name === name);
+    if (index !== -1) {
+      this.patterns.splice(index, 1);
+      this.logger.debug('Pattern removed', { name });
+      return true;
+    }
+    return false;
+  }
+}
+
+module.exports = PatternMatcher;

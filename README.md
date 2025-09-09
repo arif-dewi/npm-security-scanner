@@ -99,7 +99,7 @@ The `./scan-projects` script provides:
 ### Programmatic Usage
 
 ```javascript
-const NPMSecurityScanner = require('./scanner.js');
+const NPMSecurityScanner = require('./src/scanner/index.js');
 
 const scanner = new NPMSecurityScanner({
   directory: '/path/to/your/project',
