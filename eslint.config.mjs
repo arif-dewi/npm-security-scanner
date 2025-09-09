@@ -23,7 +23,7 @@ export default [
   },
   {
     languageOptions: {
-      ecmaVersion: 2021,
+      ecmaVersion: 2020,
       sourceType: 'module',
       globals: {
         console: 'readonly',
@@ -154,7 +154,6 @@ export default [
       'arrow-body-style': ['error', 'as-needed'],
       'arrow-parens': ['error', 'as-needed'],
       'arrow-spacing': ['error', { before: true, after: true }],
-      'constructor-super': 'error',
       'no-arrow-function': 'off',
       'no-class-assign': 'error',
       'no-const-assign': 'error',
