@@ -304,8 +304,11 @@ class NPMSecurityScanner {
       // Check npm cache for vulnerable packages
       await this.scanNpmCache();
 
-      // Scan JavaScript files for malicious patterns
+      // Scan JavaScript files for malicious patterns (including node_modules)
       await this.scanJavaScriptFiles();
+      
+      // Additional focused scan of node_modules for compromised packages
+      await this.scanNodeModulesForMaliciousCode();
 
     } finally {
       this.options.directory = originalDirectory;
@@ -486,9 +489,10 @@ class NPMSecurityScanner {
   }
 
   async scanJavaScriptFiles() {
+    // CRITICAL: Scan node_modules for malicious patterns (QIX attack targets packages)
     const jsFiles = await glob('**/*.{js,ts,jsx,tsx,mjs,cjs}', {
       cwd: this.options.directory,
-      ignore: ['**/node_modules/**', '**/dist/**', '**/build/**']
+      ignore: ['**/dist/**', '**/build/**', '**/coverage/**', '**/reports/**']
     });
 
     for (const jsFile of jsFiles) {
@@ -532,6 +536,80 @@ class NPMSecurityScanner {
       } catch (error) {
         if (this.options.verbose) {
           console.warn(chalk.yellow(`Warning: Could not read ${jsFile}: ${error.message}`));
+        }
+      }
+    }
+  }
+
+  /**
+   * Scan node_modules specifically for malicious code patterns
+   * This is critical for detecting QIX attack payloads in installed packages
+   */
+  async scanNodeModulesForMaliciousCode() {
+    const nodeModulesPath = path.join(this.options.directory, 'node_modules');
+    
+    if (!fs.existsSync(nodeModulesPath)) {
+      return;
+    }
+
+    // Get all compromised package names
+    const compromisedPackageNames = Object.keys(this.compromisedPackages);
+    
+    for (const packageName of compromisedPackageNames) {
+      const packagePath = path.join(nodeModulesPath, packageName);
+      
+      if (fs.existsSync(packagePath)) {
+        try {
+          // Scan all JS files in this specific compromised package
+          const packageJsFiles = await glob('**/*.{js,mjs,cjs}', {
+            cwd: packagePath,
+            ignore: ['**/test/**', '**/tests/**', '**/spec/**', '**/docs/**']
+          });
+
+          for (const jsFile of packageJsFiles) {
+            const filePath = path.join(packagePath, jsFile);
+            const content = fs.readFileSync(filePath, 'utf8');
+            
+            // Check for malicious patterns with higher priority
+            for (const pattern of this.maliciousPatterns) {
+              const matches = content.match(pattern.pattern);
+              if (matches) {
+                this.results.maliciousCode.push({
+                  project: this.currentProject ? this.currentProject.name : 'Unknown',
+                  projectPath: this.currentProject ? this.currentProject.relativePath : '.',
+                  file: `node_modules/${packageName}/${jsFile}`,
+                  pattern: pattern.name,
+                  severity: 'CRITICAL', // Higher severity for node_modules
+                  description: `MALICIOUS CODE DETECTED in compromised package '${packageName}': ${pattern.description}`,
+                  matches: matches.length,
+                  lineNumbers: this.getLineNumbers(content, pattern.pattern),
+                  package: packageName
+                });
+                this.results.summary.issuesFound++;
+              }
+            }
+
+            // Check for crypto addresses in compromised packages
+            for (const address of this.suspiciousAddresses) {
+              if (content.includes(address)) {
+                this.results.maliciousCode.push({
+                  project: this.currentProject ? this.currentProject.name : 'Unknown',
+                  projectPath: this.currentProject ? this.currentProject.relativePath : '.',
+                  file: `node_modules/${packageName}/${jsFile}`,
+                  pattern: 'Crypto Address in Compromised Package',
+                  severity: 'CRITICAL',
+                  description: `Suspicious crypto address found in compromised package '${packageName}': ${address}`,
+                  address: address,
+                  package: packageName
+                });
+                this.results.summary.issuesFound++;
+              }
+            }
+          }
+        } catch (error) {
+          if (this.options.verbose) {
+            console.warn(chalk.yellow(`Warning: Could not scan package ${packageName}: ${error.message}`));
+          }
         }
       }
     }
