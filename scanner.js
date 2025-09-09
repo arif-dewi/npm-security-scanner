@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { glob } = require('glob');
-const chalk = require('chalk');
+const chalk = require('chalk').default || require('chalk');
 const ora = require('ora');
 const { table } = require('table');
 const { Command } = require('commander');

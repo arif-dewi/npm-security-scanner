@@ -64,7 +64,7 @@ chmod +x scan-projects
 
 ### Usage
 
-#### Quick Start - Scan All Projects Recursively
+#### Quick Start - Scan All Projects Recursively (Recommended)
 
 ```bash
 # Scan all projects in current directory recursively
@@ -72,30 +72,29 @@ chmod +x scan-projects
 
 # Scan all projects in specific directory recursively
 ./scan-projects /path/to/your/projects
-
-# Using npm script
-npm run scan-projects
-npm run scan-projects /path/to/your/projects
 ```
 
-#### Advanced Usage
+#### Alternative Usage Methods
 
 ```bash
-# Scan current directory
-npm run scan
+# Using npm scripts
+npm run scan-projects
+npm run scan-projects /path/to/your/projects
 
-# Scan specific directory
+# Direct scanner usage (for advanced users)
 node scanner.js --directory /path/to/your/project
-
-# Verbose output
 node scanner.js --verbose
-
-# JSON output
 node scanner.js --output json
-
-# Help
 node scanner.js --help
 ```
+
+#### Why Use the Shell Script?
+
+The `./scan-projects` script provides:
+- ✅ **Clean output** - No duplicate headers or verbose messages
+- ✅ **Better UX** - Single command, clear progress reporting
+- ✅ **Team-friendly** - Easy to remember and share
+- ✅ **Consistent** - Always works the same way across environments
 
 ### Programmatic Usage
 
