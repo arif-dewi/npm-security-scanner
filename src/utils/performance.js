@@ -168,7 +168,7 @@ class PerformanceMonitor {
     }
 
     // Check memory usage
-    if (result.memoryDelta > 100 * 1024 * 1024) { // 100MB
+    if (result.memoryDelta > 500 * 1024 * 1024) { // 500MB
       issues.push({
         type: 'high_memory_usage',
         message: `Operation '${result.operation}' used ${this.formatBytes(result.memoryDelta)} of memory`,
@@ -177,7 +177,7 @@ class PerformanceMonitor {
     }
 
     // Check memory leak (only for significant memory growth in short time)
-    if (result.memoryDelta > 50 * 1024 * 1024 && result.duration < 100) { // 50MB+ in <100ms
+    if (result.memoryDelta > 200 * 1024 * 1024 && result.duration < 100) { // 200MB+ in <100ms
       issues.push({
         type: 'potential_memory_leak',
         message: `Operation '${result.operation}' may have a memory leak`,

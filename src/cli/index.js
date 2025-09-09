@@ -49,11 +49,11 @@ class SecurityScannerCLI {
       .argument('[directory]', 'Directory or project to scan (default: current directory)')
       .option('-d, --directory <path>', 'Directory to scan (default: current directory)')
       .option('-c, --concurrency <number>', 'Maximum parallel workers (auto-calculated if not specified)')
-      .option('-v, --verbose', 'Enable verbose logging')
+      .option('-v, --verbose', 'Enable verbose logging', true)
       .option('-s, --silent', 'Suppress console output')
       .option('--log-level <level>', 'Logging level (error|warn|info|debug|trace)', 'info')
       .option('--log-file <path>', 'Log file path')
-      .option('-f, --format <format>', 'Output format (console|json|markdown)', 'console')
+      .option('-f, --format <format>', 'Output format (console|json|markdown|both)', 'both')
       .option('--no-report', 'Disable report generation')
       .option('--report-dir <path>', 'Report directory', 'reports')
       .option('--no-node-modules', 'Skip node_modules scanning')
@@ -144,12 +144,35 @@ class SecurityScannerCLI {
     let results;
     if (isSingleProject) {
       this.logger.info('Scanning single project', { project: directory });
-      results = await this.scanner.scanProject(directory);
+      const projectResult = await this.scanner.scanProject(directory);
+      // Convert single project result to full scan results format
+      results = {
+        summary: projectResult.summary || {
+          filesScanned: projectResult.filesScanned || 0,
+          packagesChecked: 0,
+          issuesFound: (projectResult.compromisedPackages || []).length +
+                      (projectResult.maliciousCode || []).length +
+                      (projectResult.npmCacheIssues || []).length +
+                      (projectResult.suspiciousFiles || []).length +
+                      (projectResult.packageValidationIssues || []).length
+        },
+        compromisedPackages: projectResult.compromisedPackages || [],
+        maliciousCode: projectResult.maliciousCode || [],
+        npmCacheIssues: projectResult.npmCacheIssues || [],
+        suspiciousFiles: projectResult.suspiciousFiles || [],
+        packageValidationIssues: projectResult.packageValidationIssues || []
+      };
     } else {
       this.logger.info('Scanning directory recursively', { directory });
       results = await this.scanner.scan(directory);
     }
 
+    // Debug logging
+    this.logger.debug('Results before display:', { 
+      summary: results.summary, 
+      maliciousCodeLength: results.maliciousCode?.length || 0 
+    });
+    
     // Display results
     await this.displayResults(results, options);
 
@@ -350,7 +373,7 @@ class SecurityScannerCLI {
     }
 
     // Validate output format
-    const validFormats = ['console', 'json', 'markdown'];
+    const validFormats = ['console', 'json', 'markdown', 'both'];
     if (options.format && !validFormats.includes(options.format)) {
       throw new Error(`Invalid output format: ${options.format}. Must be one of: ${validFormats.join(', ')}`);
     }
@@ -491,7 +514,15 @@ class SecurityScannerCLI {
       return;
     }
 
-    // Console format (default)
+    if (options.format === 'both') {
+      // Display console output first
+      this.displayConsoleResults(results);
+      // Then generate markdown report
+      await this.displayMarkdownResults(results, options);
+      return;
+    }
+
+    // Console format (fallback)
     this.displayConsoleResults(results);
   }
 
@@ -504,7 +535,8 @@ class SecurityScannerCLI {
     // Use the ReportGenerator for proper console output
     const ReportGenerator = require('../utils/reportGenerator');
     const reportGenerator = new ReportGenerator(this.logger);
-    reportGenerator.generateConsoleReport(results);
+    const consoleReport = reportGenerator.generateConsoleReport(results);
+    console.log(consoleReport);
   }
 
   /**

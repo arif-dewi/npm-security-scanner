@@ -3,6 +3,8 @@
  * Handles malicious code pattern detection and validation
  */
 
+const path = require('path');
+
 class PatternMatcher {
   constructor(logger) {
     this.logger = logger;
@@ -35,12 +37,6 @@ class PatternMatcher {
         description: 'Detects malicious WebSocket endpoint for data exfiltration'
       },
       {
-        name: 'CDN Malware Hosting',
-        pattern: /(static-mw-host\.b-cdn\.net|cdn\.jsdelivr\.net\/npm\/[^/]+\/dist)/gi,
-        severity: 'HIGH',
-        description: 'Detects malicious CDN domains used for hosting malware'
-      },
-      {
         name: 'Fake NPM Domain',
         pattern: /npmjs\.help|npmjs\.org\.help/gi,
         severity: 'MEDIUM',
@@ -70,9 +66,10 @@ class PatternMatcher {
   /**
    * Scan JavaScript files in a project for malicious patterns
    * @param {string} projectPath - Path to the project
+   * @param {Object} iocs - Indicators of Compromise
    * @returns {Promise<Object>} Object with issues array and filesScanned count
    */
-  async scanJavaScriptFiles(projectPath) {
+  async scanJavaScriptFiles(projectPath, iocs = {}) {
     const fs = require('fs');
     const path = require('path');
     const { glob } = require('glob');
@@ -100,7 +97,7 @@ class PatternMatcher {
           } else {
             const content = fs.readFileSync(filePath, 'utf8');
             this.logger.debug('Read file content', { file, contentLength: content.length });
-            const issues = this.scanFileContent(content, filePath, path.basename(projectPath));
+            const issues = this.scanFileContent(content, filePath, projectPath, iocs);
             this.logger.debug('Found issues in file', { file, issuesCount: issues.length });
             results.push(...issues);
             filesScanned++;
@@ -122,6 +119,46 @@ class PatternMatcher {
   }
 
   /**
+   * Create dynamic patterns from IOC data
+   * @param {Object} iocs - Indicators of Compromise
+   * @returns {Array} Array of dynamic patterns
+   * @private
+   */
+  createDynamicPatterns(iocs) {
+    const patterns = [];
+
+    // Create patterns for malicious domains
+    if (iocs.domains && iocs.domains.length > 0) {
+      const domainPattern = iocs.domains.map(domain => 
+        domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // Escape regex special chars
+      ).join('|');
+      
+      patterns.push({
+        name: 'CDN Malware Hosting',
+        pattern: new RegExp(`(https?://)?(${domainPattern})`, 'gi'),
+        severity: 'HIGH',
+        description: 'Detects malicious CDN domains used for hosting malware'
+      });
+    }
+
+    // Create patterns for malicious IP addresses
+    if (iocs.ipAddresses && iocs.ipAddresses.length > 0) {
+      const ipPattern = iocs.ipAddresses.map(ip => 
+        ip.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      ).join('|');
+      
+      patterns.push({
+        name: 'Malicious IP Address',
+        pattern: new RegExp(`(https?://)?(${ipPattern})`, 'gi'),
+        severity: 'HIGH',
+        description: 'Detects malicious IP addresses used for hosting malware'
+      });
+    }
+
+    return patterns;
+  }
+
+  /**
    * Scan file content for malicious patterns
    * @param {string} content - File content
    * @param {string} filePath - File path
@@ -129,8 +166,10 @@ class PatternMatcher {
    * @param {Object} iocs - Indicators of Compromise
    * @returns {Array} Array of malicious patterns found
    */
-  scanFileContent(content, filePath, projectName, iocs = {}) {
+  scanFileContent(content, filePath, projectPath, iocs = {}) {
     const maliciousCode = [];
+    const projectName = path.basename(projectPath);
+    const relativePath = path.relative(projectPath, filePath);
 
     // Check against known patterns
     for (const pattern of this.patterns) {
@@ -145,6 +184,31 @@ class PatternMatcher {
         maliciousCode.push({
           project: projectName,
           file: require('path').basename(filePath),
+          relativePath: relativePath,
+          pattern: pattern.name,
+          severity: pattern.severity,
+          description: pattern.description,
+          matches: matches.length,
+          lines: matchLines
+        });
+      }
+    }
+
+    // Check against dynamic patterns from IOCs
+    const dynamicPatterns = this.createDynamicPatterns(iocs);
+    for (const pattern of dynamicPatterns) {
+      const matches = content.match(pattern.pattern);
+      if (matches) {
+        const lines = content.split('\n');
+        const matchLines = matches.map(match => {
+          const lineIndex = lines.findIndex(line => line.includes(match));
+          return lineIndex + 1;
+        });
+
+        maliciousCode.push({
+          project: projectName,
+          file: require('path').basename(filePath),
+          relativePath: relativePath,
           pattern: pattern.name,
           severity: pattern.severity,
           description: pattern.description,

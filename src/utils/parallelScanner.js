@@ -9,10 +9,11 @@ const _os = require('os');
 const EventEmitter = require('events');
 
 class ParallelScanner extends EventEmitter {
-  constructor(config, logger) {
+  constructor(config, logger, iocs = {}) {
     super();
     this.config = config;
     this.logger = logger;
+    this.iocs = iocs;
     this.maxConcurrency = config.getPerformanceConfig().maxConcurrency;
     this.timeout = config.getPerformanceConfig().timeout;
     this.workerPool = [];
@@ -22,6 +23,7 @@ class ParallelScanner extends EventEmitter {
     this.errors = [];
     this.isScanning = false;
     this.scanStartTime = null;
+    this.nextWorkerIndex = 0; // For round-robin worker assignment
   }
 
   /**
@@ -92,7 +94,8 @@ class ParallelScanner extends EventEmitter {
       const worker = new Worker(path.resolve(__dirname, 'parallelScanner.js'), {
         workerData: {
           config: this.config.options,
-          workerId: i
+          workerId: i,
+          iocs: this.iocs
         }
       });
 
@@ -160,12 +163,27 @@ class ParallelScanner extends EventEmitter {
   findIdleWorker() {
     this.logger.debug(`Looking for idle worker`, {
       totalWorkers: this.activeWorkers.size,
-      workerStatuses: Array.from(this.activeWorkers.values()).map(w => ({ workerId: w.workerId, status: w.status }))
+      workerStatuses: Array.from(this.activeWorkers.values()).map(w => ({ workerId: w.workerId, status: w.status })),
+      nextWorkerIndex: this.nextWorkerIndex
     });
     
-    for (const [worker, info] of this.activeWorkers) {
+    // Convert Map to Array for easier indexing
+    const workers = Array.from(this.activeWorkers.entries());
+    const totalWorkers = workers.length;
+    
+    if (totalWorkers === 0) {
+      this.logger.debug(`No workers available`);
+      return null;
+    }
+    
+    // Try round-robin assignment starting from nextWorkerIndex
+    for (let i = 0; i < totalWorkers; i++) {
+      const workerIndex = (this.nextWorkerIndex + i) % totalWorkers;
+      const [worker, info] = workers[workerIndex];
+      
       if (info.status === 'idle') {
-        this.logger.debug(`Found idle worker ${info.workerId}`);
+        this.nextWorkerIndex = (workerIndex + 1) % totalWorkers; // Update for next assignment
+        this.logger.debug(`Found idle worker ${info.workerId} (round-robin index ${workerIndex})`);
         return worker;
       }
     }
@@ -475,7 +493,7 @@ if (!isMainThread) {
 
   const config = new Config(workerData.config);
   const scannerLogger = new Logger(config.getLoggingConfig());
-  const scanner = new WorkerScanner(config, scannerLogger);
+  const scanner = new WorkerScanner(config, scannerLogger, workerData.iocs || {});
 
   // Handle messages from main thread
   parentPort.on('message', async message => {

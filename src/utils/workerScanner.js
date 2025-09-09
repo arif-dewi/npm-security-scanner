@@ -12,9 +12,10 @@ const PerformanceMonitor = require('./performance');
 const Validator = require('./validator');
 
 class WorkerScanner {
-  constructor(config, logger) {
+  constructor(config, logger, iocs = {}) {
     this.config = config;
     this.logger = logger;
+    this.iocs = iocs;
     this.performance = new PerformanceMonitor(logger);
     this.validator = new Validator(logger);
     this.packageScanner = new PackageScanner(logger, this.performance, this.validator);
@@ -36,19 +37,21 @@ class WorkerScanner {
       };
 
       // Step 1: Scan package.json for vulnerable packages
+      let packagesChecked = 0;
       if (this.config.get('security.scanCompromisedPackages')) {
         this.logger.debug('  📦 Scanning package.json for vulnerable packages...');
         const packageResults = await this.packageScanner.scanPackageFiles(projectPath);
-        results.compromisedPackages.push(...packageResults);
-        if (packageResults.length > 0) {
-          this.logger.debug(`  ⚠️  Found ${packageResults.length} vulnerable packages`);
+        results.compromisedPackages.push(...packageResults.compromisedPackages);
+        packagesChecked = packageResults.packagesChecked;
+        if (packageResults.compromisedPackages.length > 0) {
+          this.logger.debug(`  ⚠️  Found ${packageResults.compromisedPackages.length} vulnerable packages`);
         }
       }
 
       // Step 2: Scan JavaScript files for malicious patterns
       if (this.config.get('security.scanMaliciousCode')) {
         this.logger.debug('  🔍 Scanning JavaScript files for malicious patterns...');
-        const jsResults = await this.patternMatcher.scanJavaScriptFiles(projectPath);
+        const jsResults = await this.patternMatcher.scanJavaScriptFiles(projectPath, this.iocs);
         results.maliciousCode.push(...(jsResults.issues || []));
         if (jsResults.issues && jsResults.issues.length > 0) {
           this.logger.debug(`  ⚠️  Found ${jsResults.issues.length} malicious code patterns`);
@@ -58,7 +61,7 @@ class WorkerScanner {
       // Step 3: Scan node_modules for malicious code
       if (this.config.get('security.scanNodeModules')) {
         this.logger.debug('  📁 Scanning node_modules for malicious code...');
-        const nodeModulesResults = await this.patternMatcher.scanJavaScriptFiles(path.join(projectPath, 'node_modules'));
+        const nodeModulesResults = await this.patternMatcher.scanJavaScriptFiles(path.join(projectPath, 'node_modules'), this.iocs);
         results.maliciousCode.push(...(nodeModulesResults.issues || []));
         if (nodeModulesResults.issues && nodeModulesResults.issues.length > 0) {
           this.logger.debug(`  ⚠️  Found ${nodeModulesResults.issues.length} malicious patterns in node_modules`);
@@ -76,6 +79,15 @@ class WorkerScanner {
       }
 
       const totalIssues = results.compromisedPackages.length + results.maliciousCode.length + results.npmCacheIssues.length;
+      
+      // Calculate summary for this project
+      results.summary = {
+        filesScanned: 0, // Will be calculated by pattern matcher
+        packagesChecked: packagesChecked,
+        issuesFound: totalIssues,
+        duration: 0
+      };
+
       // End performance timer
       this.performance.endTimer(projectTimer, {
         project: projectName,

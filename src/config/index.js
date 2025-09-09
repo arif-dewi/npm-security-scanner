@@ -42,10 +42,10 @@ class Config {
 
       // Output configuration
       output: {
-        format: 'console', // 'console', 'json', 'markdown'
+        format: 'both', // 'console', 'json', 'markdown', 'both'
         report: true,
         reportDir: 'reports',
-        verbose: false,
+        verbose: true,
         silent: false,
         colors: true
       },
@@ -129,7 +129,7 @@ class Config {
     }
 
     // Validate output format
-    const validFormats = ['console', 'json', 'markdown'];
+    const validFormats = ['console', 'json', 'markdown', 'both'];
     if (!validFormats.includes(this.options.output.format)) {
       throw new Error(`Invalid output format: ${this.options.output.format}`);
     }

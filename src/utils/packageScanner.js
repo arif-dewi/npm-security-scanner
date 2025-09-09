@@ -127,7 +127,10 @@ class PackageScanner {
         });
       }
 
-      return compromisedPackages;
+      return {
+        compromisedPackages,
+        packagesChecked: Object.keys(allDeps).length
+      };
     } catch (error) {
       if (packageTimer) {
         this.performance?.endTimer(packageTimer, { error: error.message });

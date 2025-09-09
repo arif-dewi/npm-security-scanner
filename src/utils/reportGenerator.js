@@ -395,42 +395,163 @@ class ReportGenerator {
    * @private
    */
   buildMarkdownReport(results) {
-    let markdown = '# NPM Security Scanner Report\n\n';
-    markdown += `**Generated:** ${new Date().toISOString()}\n`;
-    markdown += '**Scanner Version:** 2.0.0\n\n';
+    const now = new Date();
+    const generatedDate = now.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'numeric', 
+      day: 'numeric' 
+    });
+    const generatedTime = now.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      second: '2-digit' 
+    });
+
+    let markdown = '# Security Scan Report\n\n';
+    markdown += `**Generated:** ${generatedDate}, ${generatedTime}\n`;
+    markdown += '**Scanner Version:** 2.0.0\n';
+    markdown += `**Scan Directory:** ${process.cwd()}\n\n`;
 
     // Summary
-    markdown += '## Summary\n\n';
+    markdown += '## 📊 Summary\n\n';
     markdown += `- **Files scanned:** ${results.summary.filesScanned}\n`;
     markdown += `- **Packages checked:** ${results.summary.packagesChecked}\n`;
     markdown += `- **Issues found:** ${results.summary.issuesFound}\n\n`;
 
     // Compromised packages
     if (results.compromisedPackages.length > 0) {
-      markdown += '## Compromised Packages\n\n';
-      markdown += '| Package | Version | Severity |\n';
-      markdown += '|---------|---------|----------|\n';
+      markdown += '## 🚨 Compromised Packages Found\n\n';
+      markdown += '| Project | Package | Version | Severity |\n';
+      markdown += '|---------|---------|---------|----------|\n';
 
       results.compromisedPackages.forEach(pkg => {
-        markdown += `| ${pkg.package} | ${pkg.version} | ${pkg.severity} |\n`;
+        markdown += `| ${pkg.project || 'Unknown'} | ${pkg.package} | ${pkg.version} | **${pkg.severity}** |\n`;
       });
       markdown += '\n';
     }
 
     // Malicious code
     if (results.maliciousCode.length > 0) {
-      markdown += '## Malicious Code Detected\n\n';
-      markdown += '| File | Pattern | Severity |\n';
-      markdown += '|------|---------|----------|\n';
+      markdown += '## 💀 Malicious Code Detected\n\n';
+      markdown += '| Project | Relative Path | File | Pattern | Severity | Matches | Lines |\n';
+      markdown += '|---------|---------------|------|---------|----------|---------|-------|\n';
 
-      results.maliciousCode.forEach(code => {
-        markdown += `| ${code.file} | ${code.pattern} | ${code.severity} |\n`;
+      // Group by project for better organization
+      const projectGroups = this.groupByProject(results.maliciousCode);
+      
+      Object.entries(projectGroups).forEach(([project, issues]) => {
+        const fileGroups = this.groupByFile(issues);
+        
+        Object.entries(fileGroups).forEach(([file, fileIssues]) => {
+          const patternGroups = this.groupByPattern(fileIssues);
+          
+          Object.entries(patternGroups).forEach(([pattern, patternIssues]) => {
+            const severity = patternIssues[0].severity;
+            const matches = patternIssues.length;
+            const lines = patternIssues.map(issue => issue.lines).flat().join(', ');
+                   const relativePath = patternIssues[0].relativePath || this.getRelativePath(project, file);
+            
+            markdown += `| ${project} | ${relativePath} | ${file} | ${pattern} (${matches}) | **${severity}** | ${matches} | ${lines} |\n`;
+          });
+        });
       });
       markdown += '\n';
     }
 
+    // Projects requiring attention
+    markdown += this.getMarkdownProjectsRequiringAttention(results);
+
     // Remediation steps
     markdown += this.getMarkdownRemediationSteps(results);
+
+    return markdown;
+  }
+
+  /**
+   * Group issues by project
+   * @param {Array} issues - Array of issues
+   * @returns {Object} Grouped issues by project
+   * @private
+   */
+  groupByProject(issues) {
+    return issues.reduce((groups, issue) => {
+      const project = issue.project || 'Unknown';
+      if (!groups[project]) {
+        groups[project] = [];
+      }
+      groups[project].push(issue);
+      return groups;
+    }, {});
+  }
+
+  /**
+   * Group issues by file
+   * @param {Array} issues - Array of issues
+   * @returns {Object} Grouped issues by file
+   * @private
+   */
+  groupByFile(issues) {
+    return issues.reduce((groups, issue) => {
+      const file = issue.file || 'Unknown';
+      if (!groups[file]) {
+        groups[file] = [];
+      }
+      groups[file].push(issue);
+      return groups;
+    }, {});
+  }
+
+  /**
+   * Group issues by pattern
+   * @param {Array} issues - Array of issues
+   * @returns {Object} Grouped issues by pattern
+   * @private
+   */
+  groupByPattern(issues) {
+    return issues.reduce((groups, issue) => {
+      const pattern = issue.pattern || 'Unknown';
+      if (!groups[pattern]) {
+        groups[pattern] = [];
+      }
+      groups[pattern].push(issue);
+      return groups;
+    }, {});
+  }
+
+  /**
+   * Get relative path for project and file
+   * @param {string} project - Project name
+   * @param {string} file - File name
+   * @returns {string} Relative path
+   * @private
+   */
+  getRelativePath(project, file) {
+    // This is a simplified version - in a real implementation you'd want to track actual paths
+    return `${project}/${file}`;
+  }
+
+  /**
+   * Get projects requiring immediate attention section
+   * @param {Object} results - Scan results
+   * @returns {string} Markdown projects section
+   * @private
+   */
+  getMarkdownProjectsRequiringAttention(results) {
+    let markdown = '## 📋 Projects Requiring Immediate Attention\n\n';
+    
+    const projectGroups = this.groupByProject(results.maliciousCode);
+    
+    Object.entries(projectGroups).forEach(([project, issues]) => {
+      const patternGroups = this.groupByPattern(issues);
+      
+      markdown += `### ${project}\n\n`;
+      
+      Object.entries(patternGroups).forEach(([pattern, patternIssues]) => {
+        markdown += `- ${pattern}: ${patternIssues[0].description || 'Detects malicious patterns'}\n`;
+      });
+      
+      markdown += '\n';
+    });
 
     return markdown;
   }
