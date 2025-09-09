@@ -1,7 +1,7 @@
 # NPM Security Scanner
 
 [![CI](https://github.com/arif-dewi/npm-security-scanner/workflows/CI/badge.svg)](https://github.com/arif-dewi/npm-security-scanner/actions)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)](https://nodejs.org/)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Security Scanner](https://img.shields.io/badge/security-scanner-red.svg)](https://github.com/arif-dewi/npm-security-scanner)
 
@@ -82,10 +82,11 @@ npm run scan-projects
 npm run scan-projects /path/to/your/projects
 
 # Direct scanner usage (for advanced users)
-node scanner.js --directory /path/to/your/project
-node scanner.js --verbose
-node scanner.js --output json
-node scanner.js --help
+npm run scan --directory /path/to/your/project
+npm run scan --verbose
+npm run scan --format json
+npm run scan --format both
+npm run scan --help
 ```
 
 #### Why Use the Shell Script?
@@ -114,14 +115,12 @@ scanner.scan().then(results => {
 ## 📊 Sample Output
 
 ```
-🔍 Scanning projects in: /path/to/projects
-
 🔍 NPM Security Scanner - QIX Supply Chain Attack Detection
 Scanning directory: /path/to/projects
 Scanning for compromised packages and malicious code patterns...
 
-⠋ Initializing scan...Found 47 projects to scan
-⠙ Scanning project 1/47: my-project
+Found 47 projects to scan
+Scanning project 1/47: my-project
 
 ================================================================================
 🔒 SECURITY SCAN REPORT
@@ -132,27 +131,23 @@ Files scanned: 1,247
 Packages checked: 15
 Issues found: 3
 
-💾 NPM CACHE VULNERABILITIES:
-╔═════════════╤═════════╤══════════╗
-║ Package     │ Version │ Severity ║
-╟─────────────┼─────────┼──────────╢
-║ strip-ansi  │ 7.1.1   │ HIGH     ║
-╟─────────────┼─────────┼──────────╢
-║ ansi-regex  │ 6.2.1   │ HIGH     ║
-╟─────────────┼─────────┼──────────╢
-║ ansi-styles │ 6.2.2   │ HIGH     ║
-╚═════════════╧═════════╧══════════╝
+💀 MALICIOUS CODE DETECTED:
+┌──────────────┬──────────────┬─────────────────────────────┬──────────┬─────────┬────────────────┐
+│ Project      │ File         │ Pattern                     │ Severity │ Matches │ Lines          │
+├──────────────┼──────────────┼─────────────────────────────┼──────────┼─────────┼────────────────┤
+│ my-project   │ malicious.js │ Ethereum Wallet Hook        │ HIGH     │ 4       │ 3, 7, 8, 8     │
+├──────────────┼──────────────┼─────────────────────────────┼──────────┼─────────┼────────────────┤
+│ my-project   │ malicious.js │ Crypto Address Replacement  │ HIGH     │ 1       │ 17             │
+└──────────────┴──────────────┴─────────────────────────────┴──────────┴─────────┴────────────────┘
 
 🔧 RECOMMENDED REMEDIATION STEPS:
 ================================================================================
 
-2. NPM CACHE VULNERABILITIES:
-   • IMMEDIATE ACTION: Clear npm cache to remove vulnerable packages
-   • Run: npm cache clean --force
-   • Verify: npm cache verify
-   • For each project: rm -rf node_modules package-lock.json && npm install
-   • Check cache location: npm config get cache
-   • If issues persist: rm -rf ~/.npm && npm cache verify
+1. MALICIOUS CODE DETECTED:
+   • Review all flagged files immediately
+   • Remove or quarantine suspicious code
+   • Check git history for when malicious code was introduced
+   • Consider reverting to a known clean state
 
 📄 Markdown report saved: /path/to/security-scan-report-TIMESTAMP.md
 ✔ Security scan completed!
@@ -163,7 +158,7 @@ Issues found: 3
 - **Comprehensive Scanning**: Checks package.json files, node_modules, and JavaScript files
 - **Recursive Project Discovery**: Automatically finds all projects in subdirectories
 - **Progress Reporting**: Real-time progress with spinner and detailed status
-- **Multiple Output Formats**: Console output with colors and tables, JSON export, **Markdown reports**
+- **Multiple Output Formats**: Console output with colors and tables, JSON export, **Markdown reports**, and combined output
 - **Detailed Reporting**: Shows exactly what was found and where with project paths
 - **NPM Cache Detection**: Scans your npm cache for vulnerable packages
 - **Version-Specific Detection**: Only flags packages if their specific version is vulnerable
@@ -171,7 +166,7 @@ Issues found: 3
 - **Self-Ignoring**: Automatically ignores the scanner's own directory during scans
 - **Deduplication**: Removes duplicate entries in reports
 - **Git Integration**: Shows relative paths from git repository root
-- **Configurable**: Scan specific directories, verbose mode, custom output
+- **Configurable**: Scan specific directories, verbose mode, custom output, parallel processing control
 - **Fast**: Uses efficient glob patterns and parallel processing
 - **Security-First**: Pinned dependency versions to prevent supply chain attacks
 
@@ -180,13 +175,21 @@ Issues found: 3
 | Option | Description | Default |
 |--------|-------------|---------|
 | `--directory` | Directory to scan | Current directory |
-| `--verbose` | Enable verbose output | false |
-| `--output` | Output format (console/json) | console |
+| `--verbose` | Enable verbose output | true |
+| `--format` | Output format (console/json/markdown/both) | both |
+| `--concurrency` | Maximum parallel workers | Auto-calculated |
+| `--timeout` | Worker timeout in milliseconds | 30000 |
+| `--memory-limit` | Memory limit per worker in MB | 512 |
+| `--no-node-modules` | Skip node_modules scanning | false |
+| `--no-malicious-code` | Skip malicious code scanning | false |
+| `--no-compromised-packages` | Skip compromised package scanning | false |
+| `--no-npm-cache` | Skip NPM cache scanning | false |
+| `--strict` | Enable strict mode (fail on high severity issues) | false |
 | `--help` | Show help information | - |
 
 ## 📋 Requirements
 
-- Node.js 14.0.0 or higher
+- Node.js 18.0.0 or higher
 - npm or yarn package manager
 
 ## 📄 Markdown Reports
@@ -250,11 +253,20 @@ npm cache ls | grep -E "(strip-ansi|ansi-regex|ansi-styles)"
 ## 🧪 Testing
 
 ```bash
-# Run tests
-npm test
+# Run all tests
+npm run test:all
 
-# Test with sample malicious code
-node test-scanner.js
+# Run unit tests only
+npm run test:unit
+
+# Run integration tests only
+npm run test:integration
+
+# Run linting
+npm run lint:check
+
+# Fix linting issues
+npm run lint:fix
 
 # Test the scan-projects script
 ./scan-projects
@@ -264,7 +276,7 @@ node test-scanner.js
 
 This project includes GitHub Actions for continuous integration:
 
-- **Multi-Node Testing**: Tests on Node.js 14.x, 16.x, 18.x, and 20.x
+- **Multi-Node Testing**: Tests on Node.js 18.x, 20.x, and 22.x
 - **Automated Security Scanning**: Scans the project itself for vulnerabilities
 - **Artifact Generation**: Uploads security reports as build artifacts
 - **Pull Request Validation**: Runs on every PR to ensure code quality
@@ -280,7 +292,7 @@ The CI pipeline includes:
 ### Badges
 
 - ![CI](https://github.com/arif-dewi/npm-security-scanner/workflows/CI/badge.svg) - Build status
-- ![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg) - Node.js compatibility
+- ![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg) - Node.js compatibility
 - ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg) - MIT License
 - ![Security Scanner](https://img.shields.io/badge/security-scanner-red.svg) - Security tool
 
