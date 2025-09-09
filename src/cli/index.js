@@ -519,11 +519,10 @@ class SecurityScannerCLI {
       this.displayConsoleResults(results);
       // Then generate markdown report
       await this.displayMarkdownResults(results, options);
-      return;
+    } else {
+      // Console format (fallback)
+      this.displayConsoleResults(results);
     }
-
-    // Console format (fallback)
-    this.displayConsoleResults(results);
   }
 
   /**

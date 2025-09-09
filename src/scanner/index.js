@@ -560,10 +560,10 @@ class NPMSecurityScanner {
         this.logger.debug(`  ⚠️  Found ${validationResults.length} package validation issues`);
       }
 
-      // Step 2: Scan JavaScript files for malicious patterns
+      // Step 2: Scan JavaScript files for malicious patterns (including node_modules)
       if (this.config.get('security.scanMaliciousCode')) {
         this.logger.debug('  🔍 Scanning JavaScript files for malicious patterns...');
-        const jsResults = await this.patternMatcher.scanJavaScriptFiles(projectPath, this.iocs);
+        const jsResults = await this.patternMatcher.scanJavaScriptFiles(projectPath, this.iocs, path.basename(projectPath), false, projectPath);
         results.maliciousCode.push(...jsResults.issues);
         results.filesScanned += jsResults.filesScanned;
 
@@ -572,19 +572,7 @@ class NPMSecurityScanner {
         }
       }
 
-      // Step 3: Scan node_modules for malicious code
-      if (this.config.get('security.scanNodeModules')) {
-        this.logger.debug('  📁 Scanning node_modules for malicious code...');
-        const nodeModulesResults = await this.patternMatcher.scanJavaScriptFiles(path.join(projectPath, 'node_modules'), this.iocs);
-        results.maliciousCode.push(...nodeModulesResults.issues);
-        results.filesScanned += nodeModulesResults.filesScanned;
-
-        if (nodeModulesResults.issues.length > 0) {
-          this.logger.debug(`  ⚠️  Found ${nodeModulesResults.issues.length} malicious patterns in node_modules`);
-        }
-      }
-
-      // Step 4: Scan NPM cache for vulnerabilities
+      // Step 3: Scan NPM cache for vulnerabilities
       if (this.config.get('security.scanNpmCache')) {
         this.logger.debug('  💾 Scanning NPM cache for vulnerabilities...');
         const cacheResults = await this.scanNpmCache();

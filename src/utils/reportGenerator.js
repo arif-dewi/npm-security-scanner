@@ -188,7 +188,7 @@ class ReportGenerator {
     maliciousCode.forEach(code => {
       tableData.push([
         code.project || 'Unknown',
-        code.file,
+        code.relativePath || code.file,
         code.pattern,
         code.severity,
         code.matches,
@@ -396,15 +396,15 @@ class ReportGenerator {
    */
   buildMarkdownReport(results) {
     const now = new Date();
-    const generatedDate = now.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'numeric', 
-      day: 'numeric' 
+    const generatedDate = now.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
     });
-    const generatedTime = now.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit', 
-      second: '2-digit' 
+    const generatedTime = now.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit'
     });
 
     let markdown = '# Security Scan Report\n\n';
@@ -433,25 +433,25 @@ class ReportGenerator {
     // Malicious code
     if (results.maliciousCode.length > 0) {
       markdown += '## 💀 Malicious Code Detected\n\n';
-      markdown += '| Project | Relative Path | File | Pattern | Severity | Matches | Lines |\n';
-      markdown += '|---------|---------------|------|---------|----------|---------|-------|\n';
+      markdown += '| Project | File | Pattern | Severity | Matches | Lines |\n';
+      markdown += '|---------|------|---------|----------|---------|-------|\n';
 
       // Group by project for better organization
       const projectGroups = this.groupByProject(results.maliciousCode);
-      
+
       Object.entries(projectGroups).forEach(([project, issues]) => {
         const fileGroups = this.groupByFile(issues);
-        
+
         Object.entries(fileGroups).forEach(([file, fileIssues]) => {
           const patternGroups = this.groupByPattern(fileIssues);
-          
+
           Object.entries(patternGroups).forEach(([pattern, patternIssues]) => {
             const severity = patternIssues[0].severity;
             const matches = patternIssues.length;
             const lines = patternIssues.map(issue => issue.lines).flat().join(', ');
-                   const relativePath = patternIssues[0].relativePath || this.getRelativePath(project, file);
-            
-            markdown += `| ${project} | ${relativePath} | ${file} | ${pattern} (${matches}) | **${severity}** | ${matches} | ${lines} |\n`;
+            const relativePath = patternIssues[0].relativePath || this.getRelativePath(project, file);
+
+            markdown += `| ${project} | ${relativePath} | ${pattern} | **${severity}** | ${matches} | ${lines} |\n`;
           });
         });
       });
@@ -538,18 +538,19 @@ class ReportGenerator {
    */
   getMarkdownProjectsRequiringAttention(results) {
     let markdown = '## 📋 Projects Requiring Immediate Attention\n\n';
-    
+
     const projectGroups = this.groupByProject(results.maliciousCode);
-    
+
     Object.entries(projectGroups).forEach(([project, issues]) => {
       const patternGroups = this.groupByPattern(issues);
-      
+
       markdown += `### ${project}\n\n`;
-      
+
       Object.entries(patternGroups).forEach(([pattern, patternIssues]) => {
-        markdown += `- ${pattern}: ${patternIssues[0].description || 'Detects malicious patterns'}\n`;
+        const count = patternIssues.length;
+        markdown += `- ${pattern} (${count}): ${patternIssues[0].description || 'Detects malicious patterns'}\n`;
       });
-      
+
       markdown += '\n';
     });
 
@@ -615,9 +616,10 @@ class ReportGenerator {
       });
     });
 
-    // Process malicious code
-    results.maliciousCode.forEach(code => {
-      const projectName = code.project || 'Unknown';
+    // Process malicious code - group by pattern and count
+    const maliciousCodeGroups = this.groupByProject(results.maliciousCode);
+
+    Object.entries(maliciousCodeGroups).forEach(([projectName, issues]) => {
       if (!projectMap.has(projectName)) {
         projectMap.set(projectName, {
           name: projectName,
@@ -625,9 +627,14 @@ class ReportGenerator {
           issues: []
         });
       }
-      projectMap.get(projectName).issues.push({
-        type: code.pattern,
-        description: code.description
+
+      // Group by pattern and count
+      const patternGroups = this.groupByPattern(issues);
+      Object.entries(patternGroups).forEach(([pattern, patternIssues]) => {
+        projectMap.get(projectName).issues.push({
+          type: pattern,
+          description: `${patternIssues[0].description} (${patternIssues.length})`
+        });
       });
     });
 

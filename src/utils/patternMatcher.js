@@ -67,9 +67,12 @@ class PatternMatcher {
    * Scan JavaScript files in a project for malicious patterns
    * @param {string} projectPath - Path to the project
    * @param {Object} iocs - Indicators of Compromise
+   * @param {string} parentProjectName - Optional parent project name (for node_modules scans)
+   * @param {boolean} excludeNodeModules - Whether to exclude node_modules from scanning
+   * @param {string} mainProjectPath - Main project path for relative path calculation
    * @returns {Promise<Object>} Object with issues array and filesScanned count
    */
-  async scanJavaScriptFiles(projectPath, iocs = {}) {
+  async scanJavaScriptFiles(projectPath, iocs = {}, parentProjectName = null, excludeNodeModules = false, mainProjectPath = null) {
     const fs = require('fs');
     const path = require('path');
     const { glob } = require('glob');
@@ -79,9 +82,14 @@ class PatternMatcher {
 
     try {
       // Find all JavaScript and TypeScript files
+      const ignorePatterns = ['coverage/**', 'dist/**', 'build/**', 'dev-dist/**'];
+      if (excludeNodeModules) {
+        ignorePatterns.push('node_modules/**');
+      }
+      
       const jsFiles = await glob('**/*.{js,ts,tsx,jsx}', {
         cwd: projectPath,
-        ignore: ['coverage/**', 'dist/**', 'build/**', 'dev-dist/**']
+        ignore: ignorePatterns
       });
 
       this.logger.debug('Found files to scan', { count: jsFiles.length, files: jsFiles.slice(0, 5) });
@@ -97,7 +105,7 @@ class PatternMatcher {
           } else {
             const content = fs.readFileSync(filePath, 'utf8');
             this.logger.debug('Read file content', { file, contentLength: content.length });
-            const issues = this.scanFileContent(content, filePath, projectPath, iocs);
+            const issues = this.scanFileContent(content, filePath, projectPath, iocs, parentProjectName, mainProjectPath);
             this.logger.debug('Found issues in file', { file, issuesCount: issues.length });
             results.push(...issues);
             filesScanned++;
@@ -166,10 +174,10 @@ class PatternMatcher {
    * @param {Object} iocs - Indicators of Compromise
    * @returns {Array} Array of malicious patterns found
    */
-  scanFileContent(content, filePath, projectPath, iocs = {}) {
+  scanFileContent(content, filePath, projectPath, iocs = {}, parentProjectName = null, mainProjectPath = null) {
     const maliciousCode = [];
-    const projectName = path.basename(projectPath);
-    const relativePath = path.relative(projectPath, filePath);
+    const projectName = parentProjectName || path.basename(projectPath);
+    const relativePath = path.relative(mainProjectPath || projectPath, filePath);
 
     // Check against known patterns
     for (const pattern of this.patterns) {
