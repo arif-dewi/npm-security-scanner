@@ -311,11 +311,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you find any issues or have questions:
 
-1. Check the [Issues](https://github.com/your-username/npm-security-scanner/issues) page
+1. Check the [Issues](https://github.com/arif-dewi/npm-security-scanner/issues) page
 2. Create a new issue with detailed information
-3. For security-related issues, please email security@yourcompany.com
 
 ---
 
 **Stay secure! 🔒**
-# npm-security-scanner
