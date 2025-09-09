@@ -76,6 +76,7 @@ class WorkerScanner {
       }
 
       const totalIssues = results.compromisedPackages.length + results.maliciousCode.length + results.npmCacheIssues.length;
+      // End performance timer
       this.performance.endTimer(projectTimer, {
         project: projectName,
         issuesFound: totalIssues
