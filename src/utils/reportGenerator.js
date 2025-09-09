@@ -16,9 +16,8 @@ class ReportGenerator {
   /**
    * Generate console report
    * @param {Object} results - Scan results
-   * @param {Object} options - Report options
    */
-  generateConsoleReport(results, options = {}) {
+  generateConsoleReport(results) {
     console.log(chalk.bold('\n🔒 SECURITY SCAN REPORT'));
     console.log('='.repeat(80));
 
@@ -45,6 +44,11 @@ class ReportGenerator {
       this.printSuspiciousFiles(results.suspiciousFiles);
     }
 
+    // Package validation issues
+    if (results.packageValidationIssues.length > 0) {
+      this.printPackageValidationIssues(results.packageValidationIssues);
+    }
+
     // Remediation steps
     this.printRemediationSteps(results);
 
@@ -56,11 +60,10 @@ class ReportGenerator {
    * Generate markdown report
    * @param {Object} results - Scan results
    * @param {string} outputPath - Output file path
-   * @param {Object} options - Report options
    */
-  async generateMarkdownReport(results, outputPath, options = {}) {
+  async generateMarkdownReport(results, outputPath) {
     try {
-      const markdown = this.buildMarkdownReport(results, options);
+      const markdown = this.buildMarkdownReport(results);
 
       // Ensure directory exists
       const dir = path.dirname(outputPath);
@@ -80,9 +83,8 @@ class ReportGenerator {
    * Generate JSON report
    * @param {Object} results - Scan results
    * @param {string} outputPath - Output file path
-   * @param {Object} options - Report options
    */
-  async generateJsonReport(results, outputPath, options = {}) {
+  async generateJsonReport(results, outputPath) {
     try {
       const jsonReport = {
         timestamp: new Date().toISOString(),
@@ -271,6 +273,48 @@ class ReportGenerator {
   }
 
   /**
+   * Print package validation issues section
+   * @param {Array} validationIssues - Array of package validation issues
+   * @private
+   */
+  printPackageValidationIssues(validationIssues) {
+    console.log(chalk.yellow.bold('\n⚠️  PACKAGE VALIDATION ISSUES:'));
+
+    const tableData = [
+      ['Project', 'Type', 'Description', 'Severity']
+    ];
+
+    validationIssues.forEach(issue => {
+      tableData.push([
+        issue.project || 'Unknown',
+        issue.type,
+        issue.description,
+        issue.severity
+      ]);
+    });
+
+    console.log(table(tableData, {
+      border: {
+        topBody: '─',
+        topJoin: '┬',
+        topLeft: '┌',
+        topRight: '┐',
+        bottomBody: '─',
+        bottomJoin: '┴',
+        bottomLeft: '└',
+        bottomRight: '┘',
+        bodyLeft: '│',
+        bodyRight: '│',
+        bodyJoin: '│',
+        joinBody: '─',
+        joinLeft: '├',
+        joinRight: '┤',
+        joinJoin: '┼'
+      }
+    }));
+  }
+
+  /**
    * Print remediation steps
    * @param {Object} results - Scan results
    * @private
@@ -347,11 +391,10 @@ class ReportGenerator {
   /**
    * Build markdown report content
    * @param {Object} results - Scan results
-   * @param {Object} options - Report options
    * @returns {string} Markdown content
    * @private
    */
-  buildMarkdownReport(results, options) {
+  buildMarkdownReport(results) {
     let markdown = '# NPM Security Scanner Report\n\n';
     markdown += `**Generated:** ${new Date().toISOString()}\n`;
     markdown += '**Scanner Version:** 2.0.0\n\n';

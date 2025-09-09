@@ -5,7 +5,7 @@
 
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const path = require('path');
-const os = require('os');
+const _os = require('os');
 const EventEmitter = require('events');
 
 class ParallelScanner extends EventEmitter {
@@ -196,7 +196,7 @@ class ParallelScanner extends EventEmitter {
    * @private
    */
   handleWorkerMessage(worker, message) {
-    const workerInfo = this.activeWorkers.get(worker);
+    const _workerInfo = this.activeWorkers.get(worker);
 
     switch (message.type) {
       case 'result':
@@ -436,18 +436,19 @@ class ParallelScanner extends EventEmitter {
 
 // Worker thread code
 if (!isMainThread) {
-  const NPMSecurityScanner = require('../scanner');
-  const logger = require('./logger');
+  const WorkerScanner = require('./workerScanner');
+  const Logger = require('./logger');
+  const Config = require('../config');
 
-  const config = new (require('../config'))(workerData.config);
-  const scannerLogger = new logger(config.getLoggingConfig());
-  const scanner = new NPMSecurityScanner(config, scannerLogger);
+  const config = new Config(workerData.config);
+  const scannerLogger = new Logger(config.getLoggingConfig());
+  const scanner = new WorkerScanner(config, scannerLogger);
 
   // Handle messages from main thread
   parentPort.on('message', async message => {
     try {
       switch (message.type) {
-        case 'scan':
+        case 'scan': {
           scannerLogger.info(`Worker ${workerData.workerId} starting scan`, {
             project: message.project
           });
@@ -459,6 +460,7 @@ if (!isMainThread) {
             data: result
           });
           break;
+        }
 
         default:
           scannerLogger.warn('Unknown message type in worker', {

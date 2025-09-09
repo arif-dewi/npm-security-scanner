@@ -6,10 +6,12 @@
   "scripts": {
     "scan": "node src/scanner/index.js",
     "scan-projects": "./scan-projects",
-    "test": "node test-scanner.js",
-    "test:ci": "node test-scanner.js; echo 'Scanner test completed - malicious patterns detected as expected!'",
-    "test:comprehensive": "node test-comprehensive.js",
-    "test:all": "npm run test && npm run test:comprehensive",
+    "test": "node tests/unit/test-scanner.js",
+    "test:unit": "node tests/unit/test-scanner.js",
+    "test:integration": "node tests/integration/test-comprehensive.js",
+    "test:ci": "node tests/unit/test-scanner.js; echo 'Scanner test completed - malicious patterns detected as expected!'",
+    "test:comprehensive": "node tests/integration/test-comprehensive.js",
+    "test:all": "npm run test:unit && npm run test:integration",
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --ext .js --fix",
     "lint:check": "eslint . --ext .js --max-warnings 0"

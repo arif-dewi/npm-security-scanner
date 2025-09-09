@@ -176,8 +176,8 @@ class PerformanceMonitor {
       });
     }
 
-    // Check memory leak
-    if (result.memoryDelta > 0 && result.duration < 1000) { // Quick operation with memory increase
+    // Check memory leak (only for significant memory growth in short time)
+    if (result.memoryDelta > 50 * 1024 * 1024 && result.duration < 100) { // 50MB+ in <100ms
       issues.push({
         type: 'potential_memory_leak',
         message: `Operation '${result.operation}' may have a memory leak`,

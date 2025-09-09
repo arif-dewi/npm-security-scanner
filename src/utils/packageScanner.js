@@ -180,6 +180,44 @@ class PackageScanner {
   }
 
   /**
+   * Validate package.json file
+   * @param {string} projectPath - Project path
+   * @returns {Promise<Array>} Validation issues found
+   */
+  async validatePackageJson(projectPath) {
+    try {
+      const packageJsonPath = path.join(projectPath, 'package.json');
+
+      if (!fs.existsSync(packageJsonPath)) {
+        return [];
+      }
+
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+      const validation = this.validator.validatePackageJson(packageJson);
+      
+      if (!validation.isValid) {
+        this.logger.warn('Invalid package.json detected', {
+          project: path.basename(projectPath),
+          errors: validation.errors
+        });
+        
+        return [{
+          project: path.basename(projectPath),
+          type: 'Invalid package.json',
+          severity: 'MEDIUM',
+          description: `Package.json validation failed: ${validation.errors.join(', ')}`,
+          errors: validation.errors
+        }];
+      }
+
+      return [];
+    } catch (error) {
+      this.logger.error('Failed to validate package.json', error);
+      return [];
+    }
+  }
+
+  /**
    * Add vulnerable version
    * @param {string} packageName - Package name
    * @param {string} version - Vulnerable version

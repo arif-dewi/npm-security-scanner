@@ -36,7 +36,7 @@ class PatternMatcher {
       },
       {
         name: 'CDN Malware Hosting',
-        pattern: /(static-mw-host\.b-cdn\.net|cdn\.jsdelivr\.net\/npm\/[^\/]+\/dist)/gi,
+        pattern: /(static-mw-host\.b-cdn\.net|cdn\.jsdelivr\.net\/npm\/[^/]+\/dist)/gi,
         severity: 'HIGH',
         description: 'Detects malicious CDN domains used for hosting malware'
       },
@@ -70,38 +70,56 @@ class PatternMatcher {
   /**
    * Scan JavaScript files in a project for malicious patterns
    * @param {string} projectPath - Path to the project
-   * @returns {Promise<Array>} Array of detected issues
+   * @returns {Promise<Object>} Object with issues array and filesScanned count
    */
   async scanJavaScriptFiles(projectPath) {
     const fs = require('fs');
     const path = require('path');
     const { glob } = require('glob');
-    
+
     const results = [];
-    
+    let filesScanned = 0;
+
     try {
-      // Find all JavaScript files
-      const jsFiles = await glob('**/*.js', {
+      // Find all JavaScript and TypeScript files
+      const jsFiles = await glob('**/*.{js,ts,tsx,jsx}', {
         cwd: projectPath,
-        ignore: ['node_modules/**', '*.min.js', 'coverage/**', 'dist/**', 'build/**']
+        ignore: ['coverage/**', 'dist/**', 'build/**', 'dev-dist/**']
       });
-      
+
+      this.logger.debug('Found files to scan', { count: jsFiles.length, files: jsFiles.slice(0, 5) });
+
       for (const file of jsFiles) {
         const filePath = path.join(projectPath, file);
-        
+        this.logger.debug('Processing file', { file, filePath });
+
         try {
+          // Check if it's actually a file, not a directory
+          if (!fs.statSync(filePath).isFile()) {
+            this.logger.debug('Skipping directory', { file: filePath });
+            continue;
+          }
+          
           const content = fs.readFileSync(filePath, 'utf8');
+          this.logger.debug('Read file content', { file, contentLength: content.length });
           const issues = this.scanFileContent(content, filePath, path.basename(projectPath));
+          this.logger.debug('Found issues in file', { file, issuesCount: issues.length });
           results.push(...issues);
+          filesScanned++;
         } catch (error) {
-          this.logger.debug('Error reading file', { file: filePath, error: error.message });
+          // Only log EISDIR errors in debug mode, suppress others
+          if (error.code === 'EISDIR') {
+            this.logger.debug('Skipping directory', { file: filePath });
+          } else {
+            this.logger.debug('Error reading file', { file: filePath, error: error.message });
+          }
         }
       }
     } catch (error) {
       this.logger.error('Error scanning JavaScript files', { projectPath, error: error.message });
     }
-    
-    return results;
+
+    return { issues: results, filesScanned };
   }
 
   /**

@@ -45,7 +45,7 @@ class Validator {
     // Check read permissions
     try {
       fs.accessSync(normalizedPath, fs.constants.R_OK);
-    } catch (error) {
+    } catch (_error) {
       errors.push(`No read permission for directory: ${normalizedPath}`);
       return { isValid: false, errors, warnings };
     }
@@ -217,9 +217,20 @@ class Validator {
   isValidVersion(version) {
     if (typeof version !== 'string') return false;
 
-    // Basic semver-like validation
-    const versionRegex = /^[\^~]?[\d]+\.[\d]+\.[\d]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$/;
-    return versionRegex.test(version);
+    // Accept various version formats including Git URLs, file paths, and semver
+    const patterns = [
+      /^[\^~]?[\d]+\.[\d]+\.[\d]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$/, // Standard semver
+      /^git\+https?:\/\/.*/, // Git URLs
+      /^git\+ssh:\/\/.*/, // Git SSH URLs
+      /^https?:\/\/.*/, // HTTP/HTTPS URLs
+      /^file:.*/, // File URLs
+      /^workspace:.*/, // Workspace references
+      /^\*$/, // Wildcard
+      /^[\^~]?[\d]+(\.[\d]+)*$/, // Partial versions like "1" or "1.2"
+      /^[\^~]?[\d]+(\.[\d]+)*(-[a-zA-Z0-9.-]+)?$/ // Partial versions with prerelease
+    ];
+
+    return patterns.some(pattern => pattern.test(version));
   }
 
   /**
@@ -368,7 +379,7 @@ class Validator {
     }
 
     // Normalize path separators
-    let sanitized = filePath.replace(/[\\\/]+/g, path.sep);
+    let sanitized = filePath.replace(/[\\/]+/g, path.sep);
 
     // Remove null bytes
     sanitized = sanitized.replace(/\0/g, '');
@@ -407,6 +418,7 @@ class Validator {
 
     // Remove control characters
     if (options.removeControlChars !== false) {
+      // eslint-disable-next-line no-control-regex
       sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, '');
     }
 

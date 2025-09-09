@@ -46,6 +46,7 @@ class SecurityScannerCLI {
       .name('npm-security-scanner')
       .description('Professional NPM Security Scanner - Detect compromised packages and malicious code')
       .version('2.0.0')
+      .argument('[directory]', 'Directory or project to scan (default: current directory)')
       .option('-d, --directory <path>', 'Directory to scan (default: current directory)')
       .option('-c, --concurrency <number>', 'Maximum parallel workers (auto-calculated if not specified)')
       .option('-v, --verbose', 'Enable verbose logging')
@@ -65,8 +66,10 @@ class SecurityScannerCLI {
       .option('--analyze-system', 'Analyze system and recommend optimal settings')
       .option('--test-concurrency <workers>', 'Test concurrency performance')
       .option('--config <path>', 'Configuration file path')
-      .action(async options => {
+      .action(async (directory, options) => {
         try {
+          // Add the positional argument to options
+          options.directory = directory || options.directory;
           await this.handleCommand(options);
         } catch (error) {
           this.handleError(error);
@@ -125,24 +128,48 @@ class SecurityScannerCLI {
     }
 
     if (options.testConcurrency) {
-      await this.testConcurrency(parseInt(options.testConcurrency), config);
+      await this.testConcurrency(parseInt(options.testConcurrency, 10), config);
       return;
     }
 
     // Initialize scanner
     this.scanner = new NPMSecurityScanner(config.options);
 
-    // Run scan
-    const results = await this.scanner.scan(options.directory);
+    // Get directory from options or use current directory
+    const directory = options.directory || process.cwd();
+
+    // Check if scanning a single project or directory
+    const isSingleProject = await this.isSingleProject(directory);
+
+    let results;
+    if (isSingleProject) {
+      this.logger.info('Scanning single project', { project: directory });
+      results = await this.scanner.scanProject(directory);
+    } else {
+      this.logger.info('Scanning directory recursively', { directory });
+      results = await this.scanner.scan(directory);
+    }
 
     // Display results
-    this.displayResults(results, options);
+    await this.displayResults(results, options);
 
     // Exit with appropriate code
     if (options.strict && this.hasHighSeverityIssues(results)) {
       this.logger.error('High severity issues found in strict mode');
       process.exit(1);
     }
+  }
+
+  /**
+   * Check if the given path is a single project (has package.json)
+   * @param {string} path - Path to check
+   * @returns {Promise<boolean>} True if single project
+   * @private
+   */
+  async isSingleProject(path) {
+    const fs = require('fs');
+    const packageJsonPath = require('path').join(path, 'package.json');
+    return fs.existsSync(packageJsonPath);
   }
 
   /**
@@ -186,7 +213,7 @@ class SecurityScannerCLI {
     if (options.concurrency) {
       overrides.performance = {
         ...overrides.performance,
-        maxConcurrency: parseInt(options.concurrency)
+        maxConcurrency: parseInt(options.concurrency, 10)
       };
     }
 
@@ -270,14 +297,14 @@ class SecurityScannerCLI {
     if (options.timeout) {
       overrides.performance = {
         ...overrides.performance,
-        timeout: parseInt(options.timeout)
+        timeout: parseInt(options.timeout, 10)
       };
     }
 
     if (options.memoryLimit) {
       overrides.performance = {
         ...overrides.performance,
-        memoryLimit: parseInt(options.memoryLimit) * 1024 * 1024
+        memoryLimit: parseInt(options.memoryLimit, 10) * 1024 * 1024
       };
     }
 
@@ -295,10 +322,9 @@ class SecurityScannerCLI {
   /**
    * Validate CLI inputs
    * @param {Object} options - CLI options
-   * @param {Config} config - Configuration object
    * @private
    */
-  validateInputs(options, config) {
+  validateInputs(options) {
     const validator = new Validator(this.logger);
 
     // Validate directory
@@ -311,7 +337,7 @@ class SecurityScannerCLI {
 
     // Validate concurrency
     if (options.concurrency) {
-      const concurrency = parseInt(options.concurrency);
+      const concurrency = parseInt(options.concurrency, 10);
       if (isNaN(concurrency) || concurrency < 1 || concurrency > 100) {
         throw new Error('Concurrency must be a number between 1 and 100');
       }
@@ -454,14 +480,14 @@ class SecurityScannerCLI {
    * @param {Object} options - CLI options
    * @private
    */
-  displayResults(results, options) {
+  async displayResults(results, options) {
     if (options.format === 'json') {
       console.log(JSON.stringify(results, null, 2));
       return;
     }
 
     if (options.format === 'markdown') {
-      this.displayMarkdownResults(results);
+      await this.displayMarkdownResults(results, options);
       return;
     }
 
@@ -506,13 +532,27 @@ class SecurityScannerCLI {
   /**
    * Display results in markdown format
    * @param {Object} results - Scan results
+   * @param {Object} options - CLI options
    * @private
    */
-  displayMarkdownResults(results) {
-    // Implementation for markdown output
-    console.log('# Security Scan Report\n');
-    console.log(`**Files scanned:** ${results.summary.filesScanned}`);
-    console.log(`**Issues found:** ${results.summary.issuesFound}\n`);
+  async displayMarkdownResults(results, options) {
+    const ReportGenerator = require('../utils/reportGenerator');
+    const reportGenerator = new ReportGenerator(this.logger);
+    
+    // Generate markdown report
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const reportPath = path.join(options.reportDir || 'reports', `security-scan-${timestamp}.md`);
+    
+    try {
+      await reportGenerator.generateMarkdownReport(results, reportPath);
+      console.log(`\n📄 Markdown report saved to: ${reportPath}`);
+    } catch (error) {
+      this.logger.error('Failed to generate markdown report', error);
+      // Fallback to console output
+      console.log('# Security Scan Report\n');
+      console.log(`**Files scanned:** ${results.summary.filesScanned}`);
+      console.log(`**Issues found:** ${results.summary.issuesFound}\n`);
+    }
   }
 
   /**

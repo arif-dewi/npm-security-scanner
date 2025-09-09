@@ -155,7 +155,7 @@ class ConcurrencyCalculator {
    */
   generateRecommendations(hardware, workload) {
     const { cpuCores, isMemoryConstrained, isLowMemory, isHighPerformance } = hardware;
-    const { projectCount, isLargeWorkload, isMemoryIntensive, cpuIntensity } = workload;
+    const { projectCount: _projectCount, isLargeWorkload, isMemoryIntensive, cpuIntensity } = workload;
 
     // Base concurrency (CPU cores)
     let baseConcurrency = cpuCores;
@@ -211,7 +211,7 @@ class ConcurrencyCalculator {
    * @returns {Array} - Reasoning explanations
    * @private
    */
-  generateReasoning(hardware, workload, concurrency) {
+  generateReasoning(hardware, workload, _concurrency) {
     const reasons = [];
 
     reasons.push(`Base concurrency: ${hardware.cpuCores} CPU cores`);
@@ -282,7 +282,7 @@ class ConcurrencyCalculator {
     const startMemory = process.memoryUsage();
 
     // Simulate workload
-    const promises = Array(concurrency).fill().map(async(_, i) => {
+    const promises = Array(concurrency).fill().map(async(_, _i) => {
       const projects = Math.ceil(projectCount / concurrency);
       for (let j = 0; j < projects; j++) {
         // Simulate file I/O

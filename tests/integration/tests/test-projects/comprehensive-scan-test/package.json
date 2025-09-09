@@ -1,0 +1,8 @@
+{
+  "name": "comprehensive-scan-test",
+  "version": "1.0.0",
+  "dependencies": {
+    "chalk": "5.6.1",
+    "debug": "4.4.2"
+  }
+}

@@ -29,8 +29,14 @@ jobs:
         npm ci
         npm list
         
-    - name: Run tests
-      run: npm run test:ci
+    - name: Run linting
+      run: npm run lint:check
+      
+    - name: Run unit tests
+      run: npm run test:unit
+      
+    - name: Run integration tests
+      run: npm run test:integration
       
     - name: Test scanner functionality
       run: |
@@ -39,7 +45,7 @@ jobs:
         node -e "console.log('Testing chalk:', require('chalk'))"
         
         # Test scanner help
-        node scanner.js --help
+        node src/scanner/index.js --help
         
         # Test scan-projects help
         ./scan-projects --help || true
@@ -54,7 +60,7 @@ jobs:
         
     - name: Test scanner CLI
       run: |
-        node scanner.js --help
+        node src/scanner/index.js --help
         
   security-scan:
     runs-on: ubuntu-latest

@@ -251,7 +251,7 @@ class Logger {
    * @param {string} level - New log level
    */
   setLevel(level) {
-    if (this.levels.hasOwnProperty(level)) {
+    if (Object.prototype.hasOwnProperty.call(this.levels, level)) {
       this.level = level;
     } else {
       this.warn(`Invalid log level: ${level}. Using 'info' instead.`);

@@ -106,16 +106,17 @@ class NPMSecurityScanner {
 
     // Initialize report generator
     this.reportGenerator = new ReportGenerator(this.logger);
-    
+
     // Initialize pattern matcher for malicious code detection
     this.patternMatcher = new PatternMatcher(this.logger);
-    
+
     // Initialize results structure
     this.results = {
       compromisedPackages: [],
       maliciousCode: [],
       npmCacheIssues: [],
       suspiciousFiles: [],
+      packageValidationIssues: [],
       summary: {
         filesScanned: 0,
         packagesChecked: 0,
@@ -295,7 +296,8 @@ class NPMSecurityScanner {
     this.performance.startMonitoring();
 
     try {
-      // Validate input directory
+      // Step 1: Validate input directory
+      this.logger.progress('initializing', { step: 'Validating input directory...' });
       const targetDir = directory || this.config.get('directory');
       const validation = this.validator.validateDirectory(targetDir);
 
@@ -307,9 +309,11 @@ class NPMSecurityScanner {
         validation.warnings.forEach(warning => this.logger.warn(warning));
       }
 
-      this.logger.info('Starting security scan', { directory: targetDir });
+      this.logger.info('🔍 NPM Security Scanner - QIX Supply Chain Attack Detection');
+      this.logger.info(`Scanning directory: ${targetDir}`);
 
-      // Discover projects to scan
+      // Step 2: Discover projects
+      this.logger.progress('discovering', { step: 'Discovering projects recursively...' });
       const projects = await this.discoverProjects(targetDir);
       this.logger.info(`Found ${projects.length} projects to scan`);
 
@@ -318,22 +322,32 @@ class NPMSecurityScanner {
         return this.results;
       }
 
-      // Choose scanning strategy based on configuration
+      // Step 3: Choose scanning strategy
+      this.logger.progress('configuring', {
+        step: 'Configuring scan strategy...',
+        strategy: this.config.get('performance.maxConcurrency') > 1 && projects.length > 1 ? 'parallel' : 'sequential',
+        concurrency: this.config.get('performance.maxConcurrency')
+      });
+
+      // Step 4: Execute scanning
+      this.logger.progress('scanning', { step: 'Scanning for compromised packages and malicious code patterns...' });
       if (this.config.get('performance.maxConcurrency') > 1 && projects.length > 1) {
         await this.scanProjectsParallel(projects);
       } else {
         await this.scanProjectsSequential(projects);
       }
 
-      // Generate reports if enabled
+      // Step 5: Generate reports
       if (this.config.get('output.report')) {
+        this.logger.progress('reporting', { step: 'Generating security reports...' });
         await this.reportGenerator.generateConsoleReport(this.results, {
           verbose: this.config.get('output.verbose'),
           showSummary: true
         });
       }
 
-      // Calculate final summary
+      // Step 6: Calculate final summary
+      this.logger.progress('finalizing', { step: 'Finalizing scan results...' });
       this.calculateSummary();
 
       const scanResult = this.performance.endTimer(scanTimer, {
@@ -410,6 +424,7 @@ class NPMSecurityScanner {
     this.results.maliciousCode.push(...parallelResults.results.flatMap(r => r.maliciousCode || []));
     this.results.npmCacheIssues.push(...parallelResults.results.flatMap(r => r.npmCacheIssues || []));
     this.results.suspiciousFiles.push(...parallelResults.results.flatMap(r => r.suspiciousFiles || []));
+    this.results.packageValidationIssues.push(...parallelResults.results.flatMap(r => r.packageValidationIssues || []));
 
     // Log any errors from parallel scanning
     if (parallelResults.errors.length > 0) {
@@ -434,17 +449,33 @@ class NPMSecurityScanner {
 
     for (let i = 0; i < projects.length; i++) {
       const project = projects[i];
+      const projectName = path.basename(project);
+
+      // Show progress with spinner
       this.logger.progress('scanning-project', {
         current: i + 1,
         total: projects.length,
-        project: path.basename(project)
+        project: projectName,
+        step: `Scanning project ${i + 1}/${projects.length}: ${projectName}`
       });
 
       try {
         const projectResult = await this.scanProject(project);
         this.mergeProjectResults(projectResult);
+
+        // Show completion status
+        const issuesCount = projectResult.compromisedPackages.length +
+                          projectResult.maliciousCode.length +
+                          projectResult.npmCacheIssues.length +
+                          projectResult.suspiciousFiles.length;
+
+        if (issuesCount > 0) {
+          this.logger.warn(`⚠️  ${projectName}: ${issuesCount} issues found`);
+        } else {
+          this.logger.info(`✅ ${projectName}: Clean`);
+        }
       } catch (error) {
-        this.logger.error(`Failed to scan project ${project}`, error);
+        this.logger.error(`❌ Failed to scan project ${projectName}`, error);
       }
     }
   }
@@ -479,37 +510,81 @@ class NPMSecurityScanner {
         compromisedPackages: [],
         maliciousCode: [],
         npmCacheIssues: [],
-        suspiciousFiles: []
+        suspiciousFiles: [],
+        packageValidationIssues: [],
+        filesScanned: 0
       };
 
-      // Scan package.json for vulnerable packages
+      // Step 1: Scan package.json for vulnerable packages
       if (this.config.get('security.scanCompromisedPackages')) {
+        this.logger.debug('  📦 Scanning package.json for vulnerable packages...');
         const packageResults = await this.packageScanner.scanPackageFiles(projectPath);
         results.compromisedPackages.push(...packageResults);
+        
+        if (packageResults.length > 0) {
+          this.logger.debug(`  ⚠️  Found ${packageResults.length} vulnerable packages`);
+        }
       }
 
-      // Scan JavaScript files for malicious patterns
+      // Step 1.5: Validate package.json format
+      this.logger.debug('  📋 Validating package.json format...');
+      const validationResults = await this.packageScanner.validatePackageJson(projectPath);
+      results.packageValidationIssues.push(...validationResults);
+      
+      if (validationResults.length > 0) {
+        this.logger.debug(`  ⚠️  Found ${validationResults.length} package validation issues`);
+      }
+
+      // Step 2: Scan JavaScript files for malicious patterns
       if (this.config.get('security.scanMaliciousCode')) {
+        this.logger.debug('  🔍 Scanning JavaScript files for malicious patterns...');
         const jsResults = await this.patternMatcher.scanJavaScriptFiles(projectPath);
-        results.maliciousCode.push(...jsResults);
+        results.maliciousCode.push(...jsResults.issues);
+        results.filesScanned += jsResults.filesScanned;
+        
+        if (jsResults.issues.length > 0) {
+          this.logger.debug(`  ⚠️  Found ${jsResults.issues.length} malicious code patterns`);
+        }
       }
 
-      // Scan node_modules for malicious code
+      // Step 3: Scan node_modules for malicious code
       if (this.config.get('security.scanNodeModules')) {
+        this.logger.debug('  📁 Scanning node_modules for malicious code...');
         const nodeModulesResults = await this.patternMatcher.scanJavaScriptFiles(path.join(projectPath, 'node_modules'));
-        results.maliciousCode.push(...nodeModulesResults);
+        results.maliciousCode.push(...nodeModulesResults.issues);
+        results.filesScanned += nodeModulesResults.filesScanned;
+        
+        if (nodeModulesResults.issues.length > 0) {
+          this.logger.debug(`  ⚠️  Found ${nodeModulesResults.issues.length} malicious patterns in node_modules`);
+        }
       }
 
-      // Scan NPM cache for vulnerabilities
+      // Step 4: Scan NPM cache for vulnerabilities
       if (this.config.get('security.scanNpmCache')) {
+        this.logger.debug('  💾 Scanning NPM cache for vulnerabilities...');
         const cacheResults = await this.scanNpmCache();
         results.npmCacheIssues.push(...cacheResults);
+        if (cacheResults.length > 0) {
+          this.logger.debug(`  ⚠️  Found ${cacheResults.length} NPM cache issues`);
+        }
       }
 
-      this.performance.endTimer(projectTimer, {
+      // Calculate summary for single project
+      results.summary = {
+        filesScanned: results.filesScanned,
+        packagesChecked: results.compromisedPackages.length,
+        issuesFound: results.compromisedPackages.length + results.maliciousCode.length + 
+                    results.npmCacheIssues.length + results.suspiciousFiles.length + 
+                    results.packageValidationIssues.length,
+        duration: 0
+      };
+
+      const projectResult = this.performance.endTimer(projectTimer, {
         project: projectName,
-        issuesFound: results.compromisedPackages.length + results.maliciousCode.length
+        issuesFound: results.summary.issuesFound
       });
+      
+      results.summary.duration = projectResult.duration;
 
       return results;
     } catch (error) {
@@ -529,6 +604,7 @@ class NPMSecurityScanner {
     this.results.maliciousCode.push(...projectResult.maliciousCode);
     this.results.npmCacheIssues.push(...projectResult.npmCacheIssues);
     this.results.suspiciousFiles.push(...projectResult.suspiciousFiles);
+    this.results.packageValidationIssues.push(...projectResult.packageValidationIssues);
   }
 
   /**
@@ -576,6 +652,7 @@ class NPMSecurityScanner {
       maliciousCode: [],
       npmCacheIssues: [],
       suspiciousFiles: [],
+      packageValidationIssues: [],
       summary: {
         filesScanned: 0,
         packagesChecked: 0,
@@ -594,7 +671,7 @@ class NPMSecurityScanner {
    */
   async scanNpmCache() {
     const results = [];
-    
+
     try {
       // This is a placeholder - in a real implementation, you'd scan the NPM cache
       // for vulnerable packages or malicious code
@@ -602,7 +679,7 @@ class NPMSecurityScanner {
     } catch (error) {
       this.logger.error('Error scanning NPM cache', { error: error.message });
     }
-    
+
     return results;
   }
 
@@ -613,11 +690,12 @@ class NPMSecurityScanner {
   calculateSummary() {
     this.results.summary.filesScanned = this.results.maliciousCode.length + this.results.suspiciousFiles.length;
     this.results.summary.packagesChecked = this.results.compromisedPackages.length;
-    this.results.summary.issuesFound = 
-      this.results.compromisedPackages.length + 
-      this.results.maliciousCode.length + 
-      this.results.npmCacheIssues.length + 
-      this.results.suspiciousFiles.length;
+    this.results.summary.issuesFound =
+      this.results.compromisedPackages.length +
+      this.results.maliciousCode.length +
+      this.results.npmCacheIssues.length +
+      this.results.suspiciousFiles.length +
+      this.results.packageValidationIssues.length;
   }
 }
 
