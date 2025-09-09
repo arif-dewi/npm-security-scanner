@@ -194,13 +194,13 @@ class PackageScanner {
 
       const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
       const validation = this.validator.validatePackageJson(packageJson);
-      
+
       if (!validation.isValid) {
         this.logger.warn('Invalid package.json detected', {
           project: path.basename(projectPath),
           errors: validation.errors
         });
-        
+
         return [{
           project: path.basename(projectPath),
           type: 'Invalid package.json',

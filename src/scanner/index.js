@@ -520,7 +520,7 @@ class NPMSecurityScanner {
         this.logger.debug('  📦 Scanning package.json for vulnerable packages...');
         const packageResults = await this.packageScanner.scanPackageFiles(projectPath);
         results.compromisedPackages.push(...packageResults);
-        
+
         if (packageResults.length > 0) {
           this.logger.debug(`  ⚠️  Found ${packageResults.length} vulnerable packages`);
         }
@@ -530,7 +530,7 @@ class NPMSecurityScanner {
       this.logger.debug('  📋 Validating package.json format...');
       const validationResults = await this.packageScanner.validatePackageJson(projectPath);
       results.packageValidationIssues.push(...validationResults);
-      
+
       if (validationResults.length > 0) {
         this.logger.debug(`  ⚠️  Found ${validationResults.length} package validation issues`);
       }
@@ -541,7 +541,7 @@ class NPMSecurityScanner {
         const jsResults = await this.patternMatcher.scanJavaScriptFiles(projectPath);
         results.maliciousCode.push(...jsResults.issues);
         results.filesScanned += jsResults.filesScanned;
-        
+
         if (jsResults.issues.length > 0) {
           this.logger.debug(`  ⚠️  Found ${jsResults.issues.length} malicious code patterns`);
         }
@@ -553,7 +553,7 @@ class NPMSecurityScanner {
         const nodeModulesResults = await this.patternMatcher.scanJavaScriptFiles(path.join(projectPath, 'node_modules'));
         results.maliciousCode.push(...nodeModulesResults.issues);
         results.filesScanned += nodeModulesResults.filesScanned;
-        
+
         if (nodeModulesResults.issues.length > 0) {
           this.logger.debug(`  ⚠️  Found ${nodeModulesResults.issues.length} malicious patterns in node_modules`);
         }
@@ -573,8 +573,8 @@ class NPMSecurityScanner {
       results.summary = {
         filesScanned: results.filesScanned,
         packagesChecked: results.compromisedPackages.length,
-        issuesFound: results.compromisedPackages.length + results.maliciousCode.length + 
-                    results.npmCacheIssues.length + results.suspiciousFiles.length + 
+        issuesFound: results.compromisedPackages.length + results.maliciousCode.length +
+                    results.npmCacheIssues.length + results.suspiciousFiles.length +
                     results.packageValidationIssues.length,
         duration: 0
       };
@@ -583,7 +583,7 @@ class NPMSecurityScanner {
         project: projectName,
         issuesFound: results.summary.issuesFound
       });
-      
+
       results.summary.duration = projectResult.duration;
 
       return results;

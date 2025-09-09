@@ -99,7 +99,7 @@ class PatternMatcher {
             this.logger.debug('Skipping directory', { file: filePath });
             continue;
           }
-          
+
           const content = fs.readFileSync(filePath, 'utf8');
           this.logger.debug('Read file content', { file, contentLength: content.length });
           const issues = this.scanFileContent(content, filePath, path.basename(projectPath));

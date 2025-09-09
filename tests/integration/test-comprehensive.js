@@ -130,10 +130,10 @@ class ComprehensiveTestSuite {
 
     // Verify both source code and node_modules are scanned
     const sourceFilesScanned = result.details?.summary?.filesScanned || 0;
-    const hasSourceCode = result.details?.maliciousCode?.some(issue => 
+    const hasSourceCode = result.details?.maliciousCode?.some(issue =>
       issue.file.includes('src/') || issue.file.includes('app.js')
     ) || false;
-    const hasNodeModulesCode = result.details?.maliciousCode?.some(issue => 
+    const hasNodeModulesCode = result.details?.maliciousCode?.some(issue =>
       issue.file.includes('node_modules/')
     ) || false;
 
@@ -341,7 +341,7 @@ function levenshteinDistance(address1, address2) {
       version: '1.0.0',
       dependencies: {
         chalk: '5.6.1', // Vulnerable version
-        debug: '4.4.2'  // Vulnerable version
+        debug: '4.4.2' // Vulnerable version
       }
     };
 
@@ -489,7 +489,7 @@ module.exports = require('./source');`
     // Create chalk source directory
     const chalkSourceDir = path.join(chalkDir, 'source');
     fs.mkdirSync(chalkSourceDir, { recursive: true });
-    
+
     fs.writeFileSync(
       path.join(chalkSourceDir, 'index.js'),
       `// Chalk source code
@@ -547,7 +547,6 @@ module.exports = function debug(namespace) {
   };
 };`
     );
-
   }
 
   createNodeModulesTestProject(projectDir) {

@@ -66,7 +66,7 @@ class SecurityScannerCLI {
       .option('--analyze-system', 'Analyze system and recommend optimal settings')
       .option('--test-concurrency <workers>', 'Test concurrency performance')
       .option('--config <path>', 'Configuration file path')
-      .action(async (directory, options) => {
+      .action(async(directory, options) => {
         try {
           // Add the positional argument to options
           options.directory = directory || options.directory;
@@ -538,11 +538,11 @@ class SecurityScannerCLI {
   async displayMarkdownResults(results, options) {
     const ReportGenerator = require('../utils/reportGenerator');
     const reportGenerator = new ReportGenerator(this.logger);
-    
+
     // Generate markdown report
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const reportPath = path.join(options.reportDir || 'reports', `security-scan-${timestamp}.md`);
-    
+
     try {
       await reportGenerator.generateMarkdownReport(results, reportPath);
       console.log(`\n📄 Markdown report saved to: ${reportPath}`);
