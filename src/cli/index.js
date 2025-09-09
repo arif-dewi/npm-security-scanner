@@ -501,32 +501,10 @@ class SecurityScannerCLI {
    * @private
    */
   displayConsoleResults(results) {
-    console.log(chalk.bold('\n🔒 SECURITY SCAN REPORT'));
-    console.log('='.repeat(80));
-
-    // Summary
-    console.log(chalk.bold('\n📊 SUMMARY:'));
-    console.log(`Files scanned: ${results.summary.filesScanned}`);
-    console.log(`Packages checked: ${results.summary.packagesChecked}`);
-    console.log(`Issues found: ${results.summary.issuesFound}`);
-
-    // Compromised packages
-    if (results.compromisedPackages.length > 0) {
-      console.log(chalk.red.bold('\n🚨 COMPROMISED PACKAGES FOUND:'));
-      // Display table of compromised packages
-    }
-
-    // Malicious code
-    if (results.maliciousCode.length > 0) {
-      console.log(chalk.red.bold('\n💀 MALICIOUS CODE DETECTED:'));
-      // Display table of malicious code
-    }
-
-    // NPM cache issues
-    if (results.npmCacheIssues.length > 0) {
-      console.log(chalk.yellow.bold('\n⚠️ NPM CACHE VULNERABILITIES:'));
-      // Display NPM cache issues
-    }
+    // Use the ReportGenerator for proper console output
+    const ReportGenerator = require('../utils/reportGenerator');
+    const reportGenerator = new ReportGenerator(this.logger);
+    reportGenerator.generateConsoleReport(results);
   }
 
   /**

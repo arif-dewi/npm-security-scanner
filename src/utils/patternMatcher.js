@@ -97,15 +97,14 @@ class PatternMatcher {
           // Check if it's actually a file, not a directory
           if (!fs.statSync(filePath).isFile()) {
             this.logger.debug('Skipping directory', { file: filePath });
-            continue;
+          } else {
+            const content = fs.readFileSync(filePath, 'utf8');
+            this.logger.debug('Read file content', { file, contentLength: content.length });
+            const issues = this.scanFileContent(content, filePath, path.basename(projectPath));
+            this.logger.debug('Found issues in file', { file, issuesCount: issues.length });
+            results.push(...issues);
+            filesScanned++;
           }
-
-          const content = fs.readFileSync(filePath, 'utf8');
-          this.logger.debug('Read file content', { file, contentLength: content.length });
-          const issues = this.scanFileContent(content, filePath, path.basename(projectPath));
-          this.logger.debug('Found issues in file', { file, issuesCount: issues.length });
-          results.push(...issues);
-          filesScanned++;
         } catch (error) {
           // Only log EISDIR errors in debug mode, suppress others
           if (error.code === 'EISDIR') {

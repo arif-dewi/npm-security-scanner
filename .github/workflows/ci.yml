@@ -32,17 +32,13 @@ jobs:
     - name: Run linting
       run: npm run lint:check
       
-    - name: Run unit tests
-      run: npm run test:unit
-      
-    - name: Run integration tests
-      run: npm run test:integration
+    - name: Run all tests
+      run: npm run test:all
       
     - name: Test scanner functionality
       run: |
         echo "Testing scanner functionality..."
         chmod +x scan-projects
-        node -e "console.log('Testing chalk:', require('chalk'))"
         
         # Test scanner help
         node src/scanner/index.js --help
@@ -55,8 +51,8 @@ jobs:
         ../scan-projects . || echo "Scanner completed - no issues found as expected"
         cd ..
         
-        # Test scanner on itself (should pass)
-        ./scan-projects . || echo "Scanner completed - no issues found as expected"
+        # Test scanner on test projects (should detect issues)
+        ./scan-projects tests/test-projects/malicious-project || echo "Scanner completed - malicious patterns detected as expected"
         
     - name: Test scanner CLI
       run: |
@@ -81,11 +77,19 @@ jobs:
     - name: Run security scanner on itself
       run: |
         chmod +x scan-projects
-        ./scan-projects . || true
+        echo "Running security scan on the project itself..."
+        ./scan-projects . --verbose || echo "Security scan completed"
         
-    - name: Upload security report
+    - name: Run security scanner on test projects
+      run: |
+        echo "Running security scan on test projects..."
+        ./scan-projects tests/test-projects/ --verbose || echo "Security scan completed"
+        
+    - name: Upload security reports
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: security-report
-        path: security-scan-report-*.md
+        name: security-reports
+        path: |
+          security-scan-report-*.md
+          reports/

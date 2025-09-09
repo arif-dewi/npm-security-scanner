@@ -38,7 +38,7 @@ class ParallelScanner extends EventEmitter {
     this.scanStartTime = Date.now();
     this.results = [];
     this.errors = [];
-    this.queue = [...projects];
+    this.queue = [...(projects || [])];
 
     this.logger.info(`Starting parallel scan of ${projects.length} projects`, {
       maxConcurrency: this.maxConcurrency,
@@ -202,9 +202,20 @@ class ParallelScanner extends EventEmitter {
       case 'result':
         this.handleWorkerResult(worker, message.data);
         break;
-      case 'error':
-        this.handleWorkerError(worker, new Error(message.error));
+      case 'error': {
+        let errorMessage = 'Unknown worker error';
+        if (typeof message.error === 'string') {
+          errorMessage = message.error;
+        } else if (message.error && message.error.message) {
+          errorMessage = message.error.message;
+        }
+        const error = new Error(errorMessage);
+        if (message.error && message.error.stack) {
+          error.stack = message.error.stack;
+        }
+        this.handleWorkerError(worker, error);
         break;
+      }
       case 'progress':
         this.handleWorkerProgress(worker, message.data);
         break;
@@ -239,7 +250,7 @@ class ParallelScanner extends EventEmitter {
     // Store result
     this.results.push({
       project: workerInfo.project,
-      ...data,
+      ...(data || {}),
       workerId: workerInfo.workerId,
       duration
     });
@@ -311,7 +322,7 @@ class ParallelScanner extends EventEmitter {
     const workerInfo = this.activeWorkers.get(worker);
     this.emit('progress', {
       project: workerInfo.project,
-      ...data,
+      ...(data || {}),
       workerId: workerInfo.workerId
     });
   }
@@ -471,7 +482,11 @@ if (!isMainThread) {
     } catch (error) {
       parentPort.postMessage({
         type: 'error',
-        error: error.message
+        error: {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        }
       });
     }
   });

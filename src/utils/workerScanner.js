@@ -1,16 +1,13 @@
 /**
  * Worker Scanner for Parallel Processing
- * 
+ *
  * This module is used by worker threads to avoid circular dependencies.
  * It contains only the core scanning logic without the parallel processing components.
  */
 
-const fs = require('fs');
 const path = require('path');
 const PackageScanner = require('./packageScanner');
 const PatternMatcher = require('./patternMatcher');
-const Logger = require('./logger');
-const Config = require('../config');
 const PerformanceMonitor = require('./performance');
 const Validator = require('./validator');
 
@@ -52,9 +49,9 @@ class WorkerScanner {
       if (this.config.get('security.scanMaliciousCode')) {
         this.logger.debug('  🔍 Scanning JavaScript files for malicious patterns...');
         const jsResults = await this.patternMatcher.scanJavaScriptFiles(projectPath);
-        results.maliciousCode.push(...jsResults);
-        if (jsResults.length > 0) {
-          this.logger.debug(`  ⚠️  Found ${jsResults.length} malicious code patterns`);
+        results.maliciousCode.push(...(jsResults.issues || []));
+        if (jsResults.issues && jsResults.issues.length > 0) {
+          this.logger.debug(`  ⚠️  Found ${jsResults.issues.length} malicious code patterns`);
         }
       }
 
@@ -62,9 +59,9 @@ class WorkerScanner {
       if (this.config.get('security.scanNodeModules')) {
         this.logger.debug('  📁 Scanning node_modules for malicious code...');
         const nodeModulesResults = await this.patternMatcher.scanJavaScriptFiles(path.join(projectPath, 'node_modules'));
-        results.maliciousCode.push(...nodeModulesResults);
-        if (nodeModulesResults.length > 0) {
-          this.logger.debug(`  ⚠️  Found ${nodeModulesResults.length} malicious patterns in node_modules`);
+        results.maliciousCode.push(...(nodeModulesResults.issues || []));
+        if (nodeModulesResults.issues && nodeModulesResults.issues.length > 0) {
+          this.logger.debug(`  ⚠️  Found ${nodeModulesResults.issues.length} malicious patterns in node_modules`);
         }
       }
 
