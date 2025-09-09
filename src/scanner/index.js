@@ -408,12 +408,12 @@ class NPMSecurityScanner {
           // Additional filtering to ensure we don't include node_modules
           const relativePath = path.relative(directory, projectPath);
           const pathParts = relativePath.split(path.sep);
-          
+
           // Reject if any part of the path is node_modules, dist, build, or coverage
-          return !pathParts.some(part => 
-            part === 'node_modules' || 
-            part === 'dist' || 
-            part === 'build' || 
+          return !pathParts.some(part =>
+            part === 'node_modules' ||
+            part === 'dist' ||
+            part === 'build' ||
             part === 'coverage' ||
             part === '.git'
           );

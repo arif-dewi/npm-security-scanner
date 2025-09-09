@@ -168,11 +168,10 @@ class SecurityScannerCLI {
     }
 
     // Debug logging
-    this.logger.debug('Results before display:', { 
-      summary: results.summary, 
-      maliciousCodeLength: results.maliciousCode?.length || 0 
+    this.logger.debug('Results before display:', {
+      summary: results.summary,
+      maliciousCodeLength: results.maliciousCode?.length || 0
     });
-    
     // Display results
     await this.displayResults(results, options);
 

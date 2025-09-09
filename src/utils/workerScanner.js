@@ -69,11 +69,11 @@ class WorkerScanner {
       }
 
       const totalIssues = results.compromisedPackages.length + results.maliciousCode.length + results.npmCacheIssues.length;
-      
+
       // Calculate summary for this project
       results.summary = {
         filesScanned: 0, // Will be calculated by pattern matcher
-        packagesChecked: packagesChecked,
+        packagesChecked,
         issuesFound: totalIssues,
         duration: 0
       };

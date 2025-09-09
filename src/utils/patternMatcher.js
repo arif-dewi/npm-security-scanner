@@ -86,7 +86,7 @@ class PatternMatcher {
       if (excludeNodeModules) {
         ignorePatterns.push('node_modules/**');
       }
-      
+
       const jsFiles = await glob('**/*.{js,ts,tsx,jsx}', {
         cwd: projectPath,
         ignore: ignorePatterns
@@ -137,10 +137,10 @@ class PatternMatcher {
 
     // Create patterns for malicious domains
     if (iocs.domains && iocs.domains.length > 0) {
-      const domainPattern = iocs.domains.map(domain => 
+      const domainPattern = iocs.domains.map(domain =>
         domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // Escape regex special chars
       ).join('|');
-      
+
       patterns.push({
         name: 'CDN Malware Hosting',
         pattern: new RegExp(`(https?://)?(${domainPattern})`, 'gi'),
@@ -151,10 +151,10 @@ class PatternMatcher {
 
     // Create patterns for malicious IP addresses
     if (iocs.ipAddresses && iocs.ipAddresses.length > 0) {
-      const ipPattern = iocs.ipAddresses.map(ip => 
+      const ipPattern = iocs.ipAddresses.map(ip =>
         ip.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       ).join('|');
-      
+
       patterns.push({
         name: 'Malicious IP Address',
         pattern: new RegExp(`(https?://)?(${ipPattern})`, 'gi'),
@@ -192,7 +192,7 @@ class PatternMatcher {
         maliciousCode.push({
           project: projectName,
           file: require('path').basename(filePath),
-          relativePath: relativePath,
+          relativePath,
           pattern: pattern.name,
           severity: pattern.severity,
           description: pattern.description,
@@ -216,7 +216,7 @@ class PatternMatcher {
         maliciousCode.push({
           project: projectName,
           file: require('path').basename(filePath),
-          relativePath: relativePath,
+          relativePath,
           pattern: pattern.name,
           severity: pattern.severity,
           description: pattern.description,

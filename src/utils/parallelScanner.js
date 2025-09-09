@@ -161,34 +161,34 @@ class ParallelScanner extends EventEmitter {
    * @private
    */
   findIdleWorker() {
-    this.logger.debug(`Looking for idle worker`, {
+    this.logger.debug('Looking for idle worker', {
       totalWorkers: this.activeWorkers.size,
       workerStatuses: Array.from(this.activeWorkers.values()).map(w => ({ workerId: w.workerId, status: w.status })),
       nextWorkerIndex: this.nextWorkerIndex
     });
-    
+
     // Convert Map to Array for easier indexing
     const workers = Array.from(this.activeWorkers.entries());
     const totalWorkers = workers.length;
-    
+
     if (totalWorkers === 0) {
-      this.logger.debug(`No workers available`);
+      this.logger.debug('No workers available');
       return null;
     }
-    
+
     // Try round-robin assignment starting from nextWorkerIndex
     for (let i = 0; i < totalWorkers; i++) {
       const workerIndex = (this.nextWorkerIndex + i) % totalWorkers;
       const [worker, info] = workers[workerIndex];
-      
+
       if (info.status === 'idle') {
         this.nextWorkerIndex = (workerIndex + 1) % totalWorkers; // Update for next assignment
         this.logger.debug(`Found idle worker ${info.workerId} (round-robin index ${workerIndex})`);
         return worker;
       }
     }
-    
-    this.logger.debug(`No idle workers found`);
+
+    this.logger.debug('No idle workers found');
     return null;
   }
 
@@ -532,7 +532,7 @@ if (!isMainThread) {
   });
 
   // Handle uncaught exceptions
-  process.on('uncaughtException', (error) => {
+  process.on('uncaughtException', error => {
     scannerLogger.error(`Worker ${workerData.workerId} uncaught exception`, error);
     process.exit(1);
   });
