@@ -1,5 +1,10 @@
 # NPM Security Scanner
 
+[![CI](https://github.com/arif-dewi/npm-security-scanner/workflows/CI/badge.svg)](https://github.com/arif-dewi/npm-security-scanner/actions)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Security Scanner](https://img.shields.io/badge/security-scanner-red.svg)](https://github.com/arif-dewi/npm-security-scanner)
+
 A comprehensive security scanner to detect compromised npm packages and malicious code patterns from the QIX supply chain attack that affected popular packages like `chalk` and `debug-js`.
 
 ## 🚨 About the Attack
@@ -254,6 +259,30 @@ node test-scanner.js
 # Test the scan-projects script
 ./scan-projects
 ```
+
+## 🔄 CI/CD Integration
+
+This project includes GitHub Actions for continuous integration:
+
+- **Multi-Node Testing**: Tests on Node.js 14.x, 16.x, 18.x, and 20.x
+- **Automated Security Scanning**: Scans the project itself for vulnerabilities
+- **Artifact Generation**: Uploads security reports as build artifacts
+- **Pull Request Validation**: Runs on every PR to ensure code quality
+
+### GitHub Actions Workflow
+
+The CI pipeline includes:
+1. **Dependency Installation**: Uses `npm ci` for faster, reliable installs
+2. **Test Execution**: Runs the test suite across multiple Node.js versions
+3. **Security Scanning**: Scans the project for malicious patterns
+4. **Report Generation**: Creates and uploads security scan reports
+
+### Badges
+
+- ![CI](https://github.com/arif-dewi/npm-security-scanner/workflows/CI/badge.svg) - Build status
+- ![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg) - Node.js compatibility
+- ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg) - MIT License
+- ![Security Scanner](https://img.shields.io/badge/security-scanner-red.svg) - Security tool
 
 ## 🤝 Contributing
 

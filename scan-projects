@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+
+const path = require('path');
+const NPMSecurityScanner = require('./scanner.js');
+
+async function main() {
+  const args = process.argv.slice(2);
+  const targetDirectory = args[0] || process.cwd();
+  
+  console.log(`🔍 Scanning projects in: ${targetDirectory}\n`);
+  
+  try {
+    const scanner = new NPMSecurityScanner({
+      directory: targetDirectory,
+      verbose: true,
+      silent: true
+    });
+    
+    const results = await scanner.scan();
+    
+    // Exit with error code if issues found
+    process.exit(results.summary.issuesFound > 0 ? 1 : 0);
+    
+  } catch (error) {
+    console.error('❌ Scan failed:', error.message);
+    process.exit(1);
+  }
+}
+
+main();
