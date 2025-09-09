@@ -52,7 +52,7 @@ On September 8, 2025, an attacker compromised all packages published by `qix`, i
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/npm-security-scanner.git
+git clone https://github.com/arif-dewi/npm-security-scanner.git
 cd npm-security-scanner
 
 # Install dependencies
@@ -173,6 +173,7 @@ Issues found: 3
 - **Git Integration**: Shows relative paths from git repository root
 - **Configurable**: Scan specific directories, verbose mode, custom output
 - **Fast**: Uses efficient glob patterns and parallel processing
+- **Security-First**: Pinned dependency versions to prevent supply chain attacks
 
 ## 🔧 Configuration Options
 

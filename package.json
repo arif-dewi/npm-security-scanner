@@ -19,11 +19,11 @@
   "author": "Arif Dewi",
   "license": "MIT",
   "dependencies": {
-    "chalk": "^4.1.2",
-    "commander": "^9.4.1",
-    "glob": "^10.3.10",
-    "ora": "^5.4.1",
-    "table": "^6.8.1"
+    "chalk": "4.1.2",
+    "commander": "9.4.1",
+    "glob": "10.3.10",
+    "ora": "5.4.1",
+    "table": "6.8.1"
   },
   "engines": {
     "node": ">=14.0.0"
