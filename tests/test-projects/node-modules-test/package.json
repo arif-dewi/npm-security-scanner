@@ -1,0 +1,7 @@
+{
+  "name": "node-modules-test",
+  "version": "1.0.0",
+  "dependencies": {
+    "chalk": "5.6.1"
+  }
+}

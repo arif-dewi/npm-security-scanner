@@ -11,7 +11,8 @@ class NPMSecurityScanner {
     this.options = {
       directory: options.directory || process.cwd(),
       verbose: options.verbose || false,
-      output: options.output || 'console'
+      output: options.output || 'console',
+      report: options.report !== undefined ? options.report : true
     };
 
     // Load IoCs from JSON file
@@ -141,13 +142,13 @@ class NPMSecurityScanner {
       },
       {
         name: 'Malicious Network Interception',
-        pattern: /(originalFetch|originalOpen|originalSend).*fetch|XMLHttpRequest/gi,
+        pattern: /(originalFetch|originalOpen|originalSend).*\.(fetch|XMLHttpRequest).*replace/gi,
         severity: 'HIGH',
         description: 'Detects malicious network request interception patterns'
       },
       {
         name: 'Levenshtein Distance Calculation',
-        pattern: /levenshtein.*distance/gi,
+        pattern: /levenshtein.*distance.*address.*replace|address.*levenshtein.*distance.*replace/gi,
         severity: 'LOW',
         description: 'Detects potential address similarity calculation for replacement'
       },
@@ -237,9 +238,11 @@ class NPMSecurityScanner {
       spinner.text = 'Generating security report...';
       this.generateReport();
       
-      // Step 4: Generate markdown report
-      spinner.text = 'Generating markdown report...';
-      await this.generateMarkdownReport();
+      // Step 4: Generate markdown report (unless disabled)
+      if (this.options.report !== false) {
+        spinner.text = 'Generating markdown report...';
+        await this.generateMarkdownReport();
+      }
 
       spinner.succeed('Security scan completed!');
       return this.results;
@@ -513,16 +516,33 @@ class NPMSecurityScanner {
         for (const pattern of this.maliciousPatterns) {
           const matches = content.match(pattern.pattern);
           if (matches) {
-            this.results.maliciousCode.push({
-              project: this.currentProject ? this.currentProject.name : 'Unknown',
-              projectPath: this.currentProject ? this.currentProject.relativePath : '.',
-              file: jsFile,
-              pattern: pattern.name,
-              severity: pattern.severity,
-              description: pattern.description,
-              matches: matches.length,
-              lineNumbers: this.getLineNumbers(content, pattern.pattern)
-            });
+            // Check if this pattern already exists for this project
+            const existingIssue = this.results.maliciousCode.find(issue => 
+              issue.project === (this.currentProject ? this.currentProject.name : 'Unknown') &&
+              issue.pattern === pattern.name
+            );
+            
+            if (existingIssue) {
+              // Update existing issue with more matches and files
+              existingIssue.matches += matches.length;
+              existingIssue.files = existingIssue.files || [existingIssue.file];
+              if (!existingIssue.files.includes(jsFile)) {
+                existingIssue.files.push(jsFile);
+              }
+              existingIssue.file = `${existingIssue.files.length} files`;
+            } else {
+              // Create new issue
+              this.results.maliciousCode.push({
+                project: this.currentProject ? this.currentProject.name : 'Unknown',
+                projectPath: this.currentProject ? this.currentProject.relativePath : '.',
+                file: jsFile,
+                pattern: pattern.name,
+                severity: pattern.severity,
+                description: pattern.description,
+                matches: matches.length,
+                lineNumbers: this.getLineNumbers(content, pattern.pattern)
+              });
+            }
             this.results.summary.issuesFound++;
           }
         }
@@ -589,17 +609,36 @@ class NPMSecurityScanner {
             for (const pattern of this.maliciousPatterns) {
               const matches = content.match(pattern.pattern);
               if (matches) {
-                this.results.maliciousCode.push({
-                  project: this.currentProject ? this.currentProject.name : 'Unknown',
-                  projectPath: this.currentProject ? this.currentProject.relativePath : '.',
-                  file: `node_modules/${packageName}/${jsFile}`,
-                  pattern: pattern.name,
-                  severity: 'CRITICAL', // Higher severity for node_modules
-                  description: `MALICIOUS CODE DETECTED in compromised package '${packageName}': ${pattern.description}`,
-                  matches: matches.length,
-                  lineNumbers: this.getLineNumbers(content, pattern.pattern),
-                  package: packageName
-                });
+                // Check if this pattern already exists for this project
+                const existingIssue = this.results.maliciousCode.find(issue => 
+                  issue.project === (this.currentProject ? this.currentProject.name : 'Unknown') &&
+                  issue.pattern === pattern.name &&
+                  issue.package === packageName
+                );
+                
+                if (existingIssue) {
+                  // Update existing issue with more matches and files
+                  existingIssue.matches += matches.length;
+                  existingIssue.files = existingIssue.files || [existingIssue.file];
+                  const newFile = `node_modules/${packageName}/${jsFile}`;
+                  if (!existingIssue.files.includes(newFile)) {
+                    existingIssue.files.push(newFile);
+                  }
+                  existingIssue.file = `${existingIssue.files.length} files`;
+                } else {
+                  // Create new issue
+                  this.results.maliciousCode.push({
+                    project: this.currentProject ? this.currentProject.name : 'Unknown',
+                    projectPath: this.currentProject ? this.currentProject.relativePath : '.',
+                    file: `node_modules/${packageName}/${jsFile}`,
+                    pattern: pattern.name,
+                    severity: 'CRITICAL', // Higher severity for node_modules
+                    description: `MALICIOUS CODE DETECTED in compromised package '${packageName}': ${pattern.description}`,
+                    matches: matches.length,
+                    lineNumbers: this.getLineNumbers(content, pattern.pattern),
+                    package: packageName
+                  });
+                }
                 this.results.summary.issuesFound++;
               }
             }
@@ -690,15 +729,16 @@ class NPMSecurityScanner {
       ];
       
       this.results.maliciousCode.forEach(issue => {
-        const relativePath = path.relative(process.cwd(), issue.file || '.');
+        const relativePath = path.relative(process.cwd(), issue.projectPath || '.');
+        const patternWithCount = issue.matches > 1 ? `${issue.pattern} (${issue.matches})` : issue.pattern;
         tableData.push([
           issue.project || 'Unknown',
           relativePath,
           issue.file,
-          issue.pattern,
+          patternWithCount,
           this.getSeverityColor(issue.severity),
           issue.matches.toString(),
-          issue.lineNumbers.join(', ')
+          issue.lineNumbers ? issue.lineNumbers.join(', ') : 'N/A'
         ]);
       });
       
@@ -831,8 +871,11 @@ class NPMSecurityScanner {
     console.log(chalk.bold('\n🔧 RECOMMENDED REMEDIATION STEPS:'));
     console.log('='.repeat(80));
 
+    let stepNumber = 1;
+
     if (this.results.compromisedPackages.length > 0) {
-      console.log(chalk.red.bold('\n1. IMMEDIATE ACTION REQUIRED - Compromised Packages:'));
+      console.log(chalk.red.bold(`\n${stepNumber}. IMMEDIATE ACTION REQUIRED - Compromised Packages:`));
+      stepNumber++;
       console.log('   • Remove all compromised packages immediately');
       console.log('   • Use package.json overrides to force safe versions');
       console.log('   • Check package-lock.json for any suspicious entries');
@@ -856,7 +899,8 @@ class NPMSecurityScanner {
     }
 
     if (this.results.npmCacheIssues.length > 0) {
-      console.log(chalk.red.bold('\n2. NPM CACHE VULNERABILITIES:'));
+      console.log(chalk.red.bold(`\n${stepNumber}. NPM CACHE VULNERABILITIES:`));
+      stepNumber++;
       console.log('   • IMMEDIATE ACTION: Clear npm cache to remove vulnerable packages');
       console.log('   • Run: npm cache clean --force');
       console.log('   • Verify: npm cache verify');
@@ -866,7 +910,8 @@ class NPMSecurityScanner {
     }
 
     if (this.results.maliciousCode.length > 0) {
-      console.log(chalk.red.bold('\n3. MALICIOUS CODE DETECTED:'));
+      console.log(chalk.red.bold(`\n${stepNumber}. MALICIOUS CODE DETECTED:`));
+      stepNumber++;
       console.log('   • Review all flagged files immediately');
       console.log('   • Remove or quarantine suspicious code');
       console.log('   • Check git history for when malicious code was introduced');
@@ -874,7 +919,8 @@ class NPMSecurityScanner {
       console.log('   • Scan all dependencies for similar patterns');
     }
 
-    console.log(chalk.blue.bold('\n4. GENERAL SECURITY MEASURES:'));
+    console.log(chalk.blue.bold(`\n${stepNumber}. GENERAL SECURITY MEASURES:`));
+    stepNumber++;
     console.log('   • Enable 2FA on all npm accounts');
     console.log('   • Use package-lock.json and commit it to version control');
     console.log('   • Regularly update dependencies');
@@ -882,7 +928,7 @@ class NPMSecurityScanner {
     console.log('   • Consider using npm ci in CI/CD pipelines');
     console.log('   • Review package.json changes in pull requests');
 
-    console.log(chalk.green.bold('\n5. VERIFICATION STEPS:'));
+    console.log(chalk.green.bold(`\n${stepNumber}. VERIFICATION STEPS:`));
     console.log('   • Run this scanner again after remediation');
     console.log('   • Test your application thoroughly');
     console.log('   • Monitor for any unusual network activity');
@@ -920,18 +966,38 @@ class NPMSecurityScanner {
         projectMap.set(projectName, {
           name: projectName,
           path: projectPath,
-          issues: []
+          issues: new Map() // Use Map to deduplicate by type
         });
       }
 
       const project = projectMap.get(projectName);
-      project.issues.push({
-        type: issue.pattern || issue.package || 'Suspicious file',
-        description: issue.description || `Found in ${issue.file}`
-      });
+      const issueType = issue.pattern || issue.package || 'Suspicious file';
+      const issueDescription = issue.description || `Found in ${issue.file}`;
+      
+      if (project.issues.has(issueType)) {
+        // Increment counter for existing issue
+        const existing = project.issues.get(issueType);
+        existing.count++;
+        existing.description = issueDescription; // Keep the latest description
+      } else {
+        // Create new issue
+        project.issues.set(issueType, {
+          type: issueType,
+          description: issueDescription,
+          count: 1
+        });
+      }
     });
 
-    return Array.from(projectMap.values());
+    // Convert Map back to array format
+    return Array.from(projectMap.values()).map(project => ({
+      name: project.name,
+      path: project.path,
+      issues: Array.from(project.issues.values()).map(issue => ({
+        type: issue.count > 1 ? `${issue.type} (${issue.count})` : issue.type,
+        description: issue.description
+      }))
+    }));
   }
 
   async generateMarkdownReport() {
@@ -980,8 +1046,9 @@ class NPMSecurityScanner {
         markdown += `|---------|---------------|------|---------|----------|---------|-------|\n`;
         
         this.results.maliciousCode.forEach(issue => {
-          const relativePath = path.relative(process.cwd(), issue.file || '.');
-          markdown += `| ${issue.project || 'Unknown'} | ${relativePath} | ${issue.file} | ${issue.pattern} | **${issue.severity}** | ${issue.matches} | ${issue.lineNumbers.join(', ')} |\n`;
+          const relativePath = path.relative(process.cwd(), issue.projectPath || '.');
+          const patternWithCount = issue.matches > 1 ? `${issue.pattern} (${issue.matches})` : issue.pattern;
+          markdown += `| ${issue.project || 'Unknown'} | ${relativePath} | ${issue.file} | ${patternWithCount} | **${issue.severity}** | ${issue.matches} | ${issue.lineNumbers ? issue.lineNumbers.join(', ') : 'N/A'} |\n`;
         });
         markdown += `\n`;
       }
@@ -1184,8 +1251,15 @@ program
   .option('-d, --directory <path>', 'Directory to scan', process.cwd())
   .option('-v, --verbose', 'Verbose output')
   .option('-o, --output <format>', 'Output format (console, json)', 'console')
+  .option('--no-report', 'Disable markdown report generation')
   .action(async (options) => {
     try {
+      // The --no-report flag sets options.report to false
+      // If report is undefined, default to true
+      if (options.report === undefined) {
+        options.report = true;
+      }
+      
       const scanner = new NPMSecurityScanner(options);
       const results = await scanner.scan();
       

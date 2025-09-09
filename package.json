@@ -7,7 +7,9 @@
     "scan": "node scanner.js",
     "scan-projects": "./scan-projects",
     "test": "node test-scanner.js",
-    "test:ci": "node test-scanner.js; echo 'Scanner test completed - malicious patterns detected as expected!'"
+    "test:ci": "node test-scanner.js; echo 'Scanner test completed - malicious patterns detected as expected!'",
+    "test:comprehensive": "node test-comprehensive.js",
+    "test:all": "npm run test && npm run test:comprehensive"
   },
   "keywords": [
     "security",
