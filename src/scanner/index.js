@@ -340,18 +340,15 @@ class NPMSecurityScanner {
         await this.scanProjectsSequential(projects);
       }
 
-      // Step 5: Generate reports
-      if (this.config.get('output.report')) {
-        this.logger.progress('reporting', { step: 'Generating security reports...' });
-        await this.reportGenerator.generateConsoleReport(this.results, {
-          verbose: this.config.get('output.verbose'),
-          showSummary: true
-        });
-      }
-
-      // Step 6: Calculate final summary
+      // Step 5: Calculate final summary
       this.logger.progress('finalizing', { step: 'Finalizing scan results...' });
       this.calculateSummary();
+
+      // Step 6: Generate reports (markdown only - console output handled by CLI)
+      if (this.config.get('output.report')) {
+        this.logger.progress('reporting', { step: 'Generating security reports...' });
+        // Console output is handled by the CLI layer, not here
+      }
 
       const scanResult = this.performance.endTimer(scanTimer, {
         projectsScanned: projects.length,
