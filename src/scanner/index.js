@@ -384,7 +384,7 @@ class NPMSecurityScanner {
     const discoverTimer = this.performance.startTimer('discover-projects');
 
     try {
-      // Use a more specific pattern to avoid node_modules
+      // Use a more specific pattern to avoid node_modules and the scanner project itself
       const packageJsonFiles = await glob('**/package.json', {
         cwd: directory,
         ignore: [
@@ -406,14 +406,20 @@ class NPMSecurityScanner {
           const relativePath = path.relative(directory, projectPath);
           const pathParts = relativePath.split(path.sep);
 
-          // Reject if any part of the path is node_modules, dist, build, or coverage
-          return !pathParts.some(part =>
+          // Reject if any part of the path is node_modules, dist, build, coverage, or .git
+          const isExcludedPath = pathParts.some(part =>
             part === 'node_modules' ||
             part === 'dist' ||
             part === 'build' ||
             part === 'coverage' ||
             part === '.git'
           );
+
+          // Reject if this is the scanner project itself (security-check directory)
+          const isScannerProject = path.basename(projectPath) === 'security-check' ||
+                                 path.basename(projectPath) === 'npm-security-scanner';
+
+          return !isExcludedPath && !isScannerProject;
         });
 
       this.performance.endTimer(discoverTimer, { projectsFound: projects.length });

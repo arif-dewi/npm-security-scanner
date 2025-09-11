@@ -135,8 +135,19 @@ class SecurityScannerCLI {
     // Initialize scanner
     this.scanner = new NPMSecurityScanner(config.options);
 
-    // Get directory from options or use current directory
-    const directory = options.directory || process.cwd();
+    // Get directory from options or use parent directory (excluding scanner project)
+    let directory = options.directory;
+
+    if (!directory) {
+      // If no directory specified, scan parent directory to avoid scanning the scanner itself
+      const currentDir = process.cwd();
+      const parentDir = path.dirname(currentDir);
+      directory = parentDir;
+      this.logger.info('No directory specified, scanning parent directory to avoid self-scan', {
+        currentDir,
+        parentDir: directory
+      });
+    }
 
     // Check if scanning a single project or directory
     const isSingleProject = await this.isSingleProject(directory);
