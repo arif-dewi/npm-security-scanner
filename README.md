@@ -19,6 +19,29 @@ On September 8, 2025, an attacker compromised all packages published by `qix`, i
 
 ## 🔍 What This Scanner Detects
 
+### How the Scanner Works
+
+The scanner performs **two different types of security checks**:
+
+#### 1. **Package Vulnerability Check** (Fast - Metadata Only)
+- **What it checks**: Direct dependencies from `package.json` (dependencies + devDependencies)
+- **How it works**: Reads package names and versions, compares against known vulnerable versions
+- **What it finds**: Packages with known security vulnerabilities
+- **Example**: `chalk@5.6.1` is vulnerable, `chalk@4.1.2` is safe
+
+#### 2. **Malicious Code Pattern Scan** (Thorough - Code Analysis)
+- **What it checks**: ALL JavaScript/TypeScript files in your project (including node_modules)
+- **How it works**: Reads file contents and searches for malicious code patterns
+- **What it finds**: Actual malicious code injected into files
+- **Example**: `new WebSocket('ws://suspicious-site.com')` in any file
+
+### Why This Approach?
+
+- **Package Check**: Fast verification of known vulnerabilities in dependencies you control
+- **Code Scan**: Comprehensive detection of malicious code that could be anywhere
+- **Efficiency**: Checks 20 direct dependencies instantly, scans 10,000+ files in seconds
+- **Coverage**: Catches both known vulnerabilities AND unknown malicious code
+
 ### Compromised Packages
 - **Version-specific detection**: Only flags packages if their installed version is vulnerable
 - All packages published by the `qix` author with vulnerable versions
@@ -127,9 +150,9 @@ Scanning project 1/47: my-project
 ================================================================================
 
 📊 SUMMARY:
-Files scanned: 1,247
-Packages checked: 15
-Issues found: 3
+Files scanned: 10,087    # All JS/TS files scanned for malicious code
+Packages checked: 20     # Direct dependencies checked for vulnerabilities
+Issues found: 3          # Total security issues found
 
 💀 MALICIOUS CODE DETECTED:
 ┌──────────────┬──────────────┬─────────────────────────────┬──────────┬─────────┬────────────────┐
@@ -164,6 +187,7 @@ Issues found: 3
 - **Version-Specific Detection**: Only flags packages if their specific version is vulnerable
 - **Comprehensive Remediation**: Step-by-step instructions for fixing issues
 - **Self-Ignoring**: Automatically ignores the scanner's own directory during scans
+- **Test File Exclusion**: Excludes test files by default to prevent false positives (use `--include-tests` to include them)
 - **Deduplication**: Removes duplicate entries in reports
 - **Git Integration**: Shows relative paths from git repository root
 - **Configurable**: Scan specific directories, verbose mode, custom output, parallel processing control
@@ -184,6 +208,7 @@ Issues found: 3
 | `--no-malicious-code` | Skip malicious code scanning | false |
 | `--no-compromised-packages` | Skip compromised package scanning | false |
 | `--no-npm-cache` | Skip NPM cache scanning | false |
+| `--include-tests` | Include test files in scanning (excluded by default) | false |
 | `--strict` | Enable strict mode (fail on high severity issues) | false |
 | `--help` | Show help information | - |
 
