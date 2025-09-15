@@ -37,6 +37,9 @@ class TestFileExclusionTestSuite {
     } catch (error) {
       console.error(chalk.red('Test suite failed:'), error.message);
       process.exit(1);
+    } finally {
+      // Always clean up, even if tests fail
+      this.cleanup();
     }
   }
 
@@ -144,14 +147,13 @@ class TestFileExclusionTestSuite {
     );
 
     // Create a clean source file
-    const cleanCode = `
-// Clean JavaScript module
+    const cleanCode = `// Clean JavaScript module
 function App() {
   return 'Hello World';
 }
 
 module.exports = App;
-    `;
+`;
 
     fs.writeFileSync(path.join(projectDir, 'App.js'), cleanCode);
 
@@ -164,26 +166,30 @@ module.exports = App;
 // Test WebSocket connection (should be excluded)
 const _ws = new WebSocket('ws://localhost:1234');
 
-test('renders App component', () => {
+// Simple test without framework globals
+function testApp() {
   const result = App();
-  expect(result).toBe('Hello World');
-});
+  return result === 'Hello World';
+}
+
+module.exports = { testApp };
 `
       },
       {
         name: 'App.spec.js',
         content: `const App = require('./App');
 
-        // Test WebSocket connection (should be excluded)
-        const _ws = new WebSocket('ws://localhost:1234');
+// Test WebSocket connection (should be excluded)
+const _ws = new WebSocket('ws://localhost:1234');
 
-        describe('App', () => {
-          it('renders without crashing', () => {
-            const result = App();
-            expect(result).toBe('Hello World');
-          });
-        });
-        `
+// Simple test without framework globals
+function testApp() {
+  const result = App();
+  return result === 'Hello World';
+}
+
+module.exports = { testApp };
+`
       },
       {
         name: 'test-utils.js',
@@ -260,8 +266,8 @@ const _ws = new WebSocket('ws://localhost:1234');
       fs.writeFileSync(
         filePath,
         `// Test file: ${pattern} (should be excluded)
-          const _ws = new WebSocket('ws://localhost:1234');
-        `
+const _ws = new WebSocket('ws://localhost:1234');
+`
       );
     });
   }
