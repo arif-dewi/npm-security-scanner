@@ -161,7 +161,7 @@ class SecurityScannerCLI {
       results = {
         summary: projectResult.summary || {
           filesScanned: projectResult.filesScanned || 0,
-          packagesChecked: 0,
+          packagesChecked: projectResult.packagesChecked || 0,
           issuesFound: (projectResult.compromisedPackages || []).length +
                       (projectResult.maliciousCode || []).length +
                       (projectResult.npmCacheIssues || []).length +

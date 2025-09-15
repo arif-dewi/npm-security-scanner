@@ -548,7 +548,8 @@ class NPMSecurityScanner {
         npmCacheIssues: [],
         suspiciousFiles: [],
         packageValidationIssues: [],
-        filesScanned: 0
+        filesScanned: 0,
+        packagesChecked: 0
       };
 
       // Step 1: Scan package.json for vulnerable packages
@@ -556,6 +557,7 @@ class NPMSecurityScanner {
         this.logger.debug('  📦 Scanning package.json for vulnerable packages...');
         const packageResults = await this.packageScanner.scanPackageFiles(projectPath);
         results.compromisedPackages.push(...packageResults.compromisedPackages);
+        results.packagesChecked = packageResults.packagesChecked || 0;
 
         if (packageResults.compromisedPackages.length > 0) {
           this.logger.debug(`  ⚠️  Found ${packageResults.compromisedPackages.length} vulnerable packages`);
@@ -596,7 +598,7 @@ class NPMSecurityScanner {
       // Calculate summary for single project
       results.summary = {
         filesScanned: results.filesScanned,
-        packagesChecked: results.compromisedPackages.length,
+        packagesChecked: results.packagesChecked,
         issuesFound: results.compromisedPackages.length + results.maliciousCode.length +
                     results.npmCacheIssues.length + results.suspiciousFiles.length +
                     results.packageValidationIssues.length,
