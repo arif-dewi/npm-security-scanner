@@ -189,13 +189,13 @@ class Config {
    */
   getScanPatterns() {
     let excludePatterns = [...this.options.excludePatterns];
-    
+
     // Add test file patterns if test exclusion is enabled
     if (this.options.security.excludeTestFiles) {
       const testPatterns = this.getTestFilePatterns();
       excludePatterns = [...excludePatterns, ...testPatterns];
     }
-    
+
     return {
       include: this.options.includePatterns,
       exclude: excludePatterns

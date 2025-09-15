@@ -1,10 +1,8 @@
 
-// Clean React component
-import React from 'react';
-
+// Clean JavaScript module
 function App() {
-  return <div>Hello World</div>;
+  return 'Hello World';
 }
 
-export default App;
+module.exports = App;
     

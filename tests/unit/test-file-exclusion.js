@@ -145,14 +145,12 @@ class TestFileExclusionTestSuite {
 
     // Create a clean source file
     const cleanCode = `
-// Clean React component
-import React from 'react';
-
+// Clean JavaScript module
 function App() {
-  return <div>Hello World</div>;
+  return 'Hello World';
 }
 
-export default App;
+module.exports = App;
     `;
 
     fs.writeFileSync(path.join(projectDir, 'App.js'), cleanCode);
@@ -161,46 +159,43 @@ export default App;
     const testFiles = [
       {
         name: 'App.test.js',
-        content: `
-import React from 'react';
-import { render } from '@testing-library/react';
-import App from './App';
+        content: `const App = require('./App');
 
 // Test WebSocket connection (should be excluded)
-const ws = new WebSocket('ws://localhost:1234');
+const _ws = new WebSocket('ws://localhost:1234');
 
 test('renders App component', () => {
-  render(<App />);
+  const result = App();
+  expect(result).toBe('Hello World');
 });
-        `
+`
       },
       {
         name: 'App.spec.js',
-        content: `
-import React from 'react';
-import { render } from '@testing-library/react';
-import App from './App';
+        content: `const App = require('./App');
 
-// Test WebSocket connection (should be excluded)
-const ws = new WebSocket('ws://localhost:1234');
+        // Test WebSocket connection (should be excluded)
+        const _ws = new WebSocket('ws://localhost:1234');
 
-describe('App', () => {
-  it('renders without crashing', () => {
-    render(<App />);
-  });
-});
+        describe('App', () => {
+          it('renders without crashing', () => {
+            const result = App();
+            expect(result).toBe('Hello World');
+          });
+        });
         `
       },
       {
         name: 'test-utils.js',
-        content: `
-// Test utility with WebSocket (should be excluded)
-const ws = new WebSocket('ws://localhost:1234');
+        content: `// Test utility with WebSocket (should be excluded)
+const _ws = new WebSocket('ws://localhost:1234');
 
-export function createTestWrapper() {
-  return { ws };
+function createTestWrapper() {
+  return { ws: _ws };
 }
-        `
+
+module.exports = { createTestWrapper };
+`
       }
     ];
 
@@ -213,13 +208,12 @@ export function createTestWrapper() {
     testDirs.forEach(dir => {
       const testDirPath = path.join(projectDir, dir);
       fs.mkdirSync(testDirPath, { recursive: true });
-      
+
       fs.writeFileSync(
         path.join(testDirPath, 'index.js'),
-        `
-// Test file in ${dir} directory (should be excluded)
-const ws = new WebSocket('ws://localhost:1234');
-        `
+        `// Test file in ${dir} directory (should be excluded)
+const _ws = new WebSocket('ws://localhost:1234');
+`
       );
     });
   }
@@ -254,20 +248,19 @@ const ws = new WebSocket('ws://localhost:1234');
     testPatterns.forEach(pattern => {
       const filePath = path.join(projectDir, pattern);
       const dirPath = path.dirname(filePath);
-      
+
       if (dirPath !== '.') {
         try {
           fs.mkdirSync(dirPath, { recursive: true });
-        } catch (error) {
+        } catch (_error) {
           // Directory might already exist, continue
         }
       }
-      
+
       fs.writeFileSync(
         filePath,
-        `
-// Test file: ${pattern} (should be excluded)
-const ws = new WebSocket('ws://localhost:1234');
+        `// Test file: ${pattern} (should be excluded)
+          const _ws = new WebSocket('ws://localhost:1234');
         `
       );
     });
@@ -289,7 +282,7 @@ const ws = new WebSocket('ws://localhost:1234');
       const maliciousMatch = output.match(/MALICIOUS CODE DETECTED/);
 
       // Count malicious code issues
-      const maliciousCodeCount = maliciousMatch ? 
+      const maliciousCodeCount = maliciousMatch ?
         (output.match(/WebSocket Data Exfiltration/g) || []).length : 0;
 
       return {

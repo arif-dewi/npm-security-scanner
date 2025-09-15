@@ -1,12 +1,9 @@
-
-import React from 'react';
-import { render } from '@testing-library/react';
-import App from './App';
+const App = require('./App');
 
 // Test WebSocket connection (should be excluded)
-const ws = new WebSocket('ws://localhost:1234');
+const _ws = new WebSocket('ws://localhost:1234');
 
 test('renders App component', () => {
-  render(<App />);
+  const result = App();
+  expect(result).toBe('Hello World');
 });
-        

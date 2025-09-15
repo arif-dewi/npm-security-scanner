@@ -1,8 +1,8 @@
-
 // Test utility with WebSocket (should be excluded)
-const ws = new WebSocket('ws://localhost:1234');
+const _ws = new WebSocket('ws://localhost:1234');
 
-export function createTestWrapper() {
-  return { ws };
+function createTestWrapper() {
+  return { ws: _ws };
 }
-        
+
+module.exports = { createTestWrapper };
