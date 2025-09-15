@@ -63,6 +63,7 @@ class Config {
         scanCompromisedPackages: true,
         scanNpmCache: true,
         scanNodeModules: true,
+        excludeTestFiles: true,
         strictMode: false,
         failOnHigh: false
       },
@@ -187,10 +188,38 @@ class Config {
    * @returns {Object} - Include and exclude patterns
    */
   getScanPatterns() {
+    let excludePatterns = [...this.options.excludePatterns];
+    
+    // Add test file patterns if test exclusion is enabled
+    if (this.options.security.excludeTestFiles) {
+      const testPatterns = this.getTestFilePatterns();
+      excludePatterns = [...excludePatterns, ...testPatterns];
+    }
+    
     return {
       include: this.options.includePatterns,
-      exclude: this.options.excludePatterns
+      exclude: excludePatterns
     };
+  }
+
+  /**
+   * Get test file patterns to exclude
+   * @returns {Array} - Array of test file patterns
+   */
+  getTestFilePatterns() {
+    return [
+      '**/test/**',
+      '**/tests/**',
+      '**/__tests__/**',
+      '**/*.test.*',
+      '**/*.spec.*',
+      '**/test.*',
+      '**/spec.*',
+      '**/test-*',
+      '**/spec-*',
+      '**/*.test',
+      '**/*.spec'
+    ];
   }
 
   /**
@@ -291,7 +320,8 @@ class Config {
         maliciousCode: this.options.security.scanMaliciousCode,
         compromisedPackages: this.options.security.scanCompromisedPackages,
         npmCache: this.options.security.scanNpmCache,
-        nodeModules: this.options.security.scanNodeModules
+        nodeModules: this.options.security.scanNodeModules,
+        excludeTestFiles: this.options.security.excludeTestFiles
       },
       performance: {
         maxConcurrency: this.options.performance.maxConcurrency,

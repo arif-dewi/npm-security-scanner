@@ -70,9 +70,10 @@ class PatternMatcher {
    * @param {string} parentProjectName - Optional parent project name (for node_modules scans)
    * @param {boolean} excludeNodeModules - Whether to exclude node_modules from scanning
    * @param {string} mainProjectPath - Main project path for relative path calculation
+   * @param {Object} config - Configuration object with test exclusion settings
    * @returns {Promise<Object>} Object with issues array and filesScanned count
    */
-  async scanJavaScriptFiles(projectPath, iocs = {}, parentProjectName = null, excludeNodeModules = false, mainProjectPath = null) {
+  async scanJavaScriptFiles(projectPath, iocs = {}, parentProjectName = null, excludeNodeModules = false, mainProjectPath = null, config = null) {
     const fs = require('fs');
     const path = require('path');
     const { glob } = require('glob');
@@ -85,6 +86,24 @@ class PatternMatcher {
       const ignorePatterns = ['coverage/**', 'dist/**', 'build/**', 'dev-dist/**'];
       if (excludeNodeModules) {
         ignorePatterns.push('node_modules/**');
+      }
+
+      // Add test file patterns if test exclusion is enabled
+      if (config && config.get && config.get('security.excludeTestFiles')) {
+        const testPatterns = config.getTestFilePatterns ? config.getTestFilePatterns() : [
+          '**/test/**',
+          '**/tests/**',
+          '**/__tests__/**',
+          '**/*.test.*',
+          '**/*.spec.*',
+          '**/test.*',
+          '**/spec.*',
+          '**/test-*',
+          '**/spec-*',
+          '**/*.test',
+          '**/*.spec'
+        ];
+        ignorePatterns.push(...testPatterns);
       }
 
       const jsFiles = await glob('**/*.{js,ts,tsx,jsx}', {

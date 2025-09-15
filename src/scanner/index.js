@@ -385,18 +385,26 @@ class NPMSecurityScanner {
 
     try {
       // Use a more specific pattern to avoid node_modules and the scanner project itself
+      const ignorePatterns = [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/build/**',
+        '**/coverage/**',
+        '**/.git/**',
+        '**/security-check/**',
+        '**/test-scanner.js',
+        '**/test-comprehensive.js'
+      ];
+
+      // Add test file patterns if test exclusion is enabled
+      if (this.config.get('security.excludeTestFiles')) {
+        const testPatterns = this.config.getTestFilePatterns();
+        ignorePatterns.push(...testPatterns);
+      }
+
       const packageJsonFiles = await glob('**/package.json', {
         cwd: directory,
-        ignore: [
-          '**/node_modules/**',
-          '**/dist/**',
-          '**/build/**',
-          '**/coverage/**',
-          '**/.git/**',
-          '**/security-check/**',
-          '**/test-scanner.js',
-          '**/test-comprehensive.js'
-        ]
+        ignore: ignorePatterns
       });
 
       const projects = packageJsonFiles
@@ -566,7 +574,7 @@ class NPMSecurityScanner {
       // Step 2: Scan JavaScript files for malicious patterns (including node_modules)
       if (this.config.get('security.scanMaliciousCode')) {
         this.logger.debug('  🔍 Scanning JavaScript files for malicious patterns...');
-        const jsResults = await this.patternMatcher.scanJavaScriptFiles(projectPath, this.iocs, path.basename(projectPath), false, projectPath);
+        const jsResults = await this.patternMatcher.scanJavaScriptFiles(projectPath, this.iocs, path.basename(projectPath), false, projectPath, this.config);
         results.maliciousCode.push(...jsResults.issues);
         results.filesScanned += jsResults.filesScanned;
 

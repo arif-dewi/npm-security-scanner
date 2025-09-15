@@ -60,6 +60,7 @@ class SecurityScannerCLI {
       .option('--no-malicious-code', 'Skip malicious code scanning')
       .option('--no-compromised-packages', 'Skip compromised package scanning')
       .option('--no-npm-cache', 'Skip NPM cache scanning')
+      .option('--include-tests', 'Include test files in scanning (excluded by default)')
       .option('--timeout <ms>', 'Worker timeout in milliseconds', '30000')
       .option('--memory-limit <mb>', 'Memory limit per worker in MB', '512')
       .option('--strict', 'Enable strict mode (fail on high severity issues)')
@@ -324,6 +325,13 @@ class SecurityScannerCLI {
       overrides.security = {
         ...overrides.security,
         scanNpmCache: false
+      };
+    }
+
+    if (options.includeTests) {
+      overrides.security = {
+        ...overrides.security,
+        excludeTestFiles: false
       };
     }
 
