@@ -1,0 +1,176 @@
+{
+  "attackInfo": {
+    "qixAttack": {
+      "name": "QIX Supply Chain Attack",
+      "date": "September 2025",
+      "description": "Account takeover of 'qix' publisher via phishing"
+    },
+    "tinycolorAttack": {
+      "name": "Tinycolor Supply Chain Attack", 
+      "date": "September 2025",
+      "description": "Malicious update to @ctrl/tinycolor with bundle.js containing TruffleHog execution"
+    }
+  },
+  "patterns": [
+    {
+      "name": "Ethereum Wallet Hook",
+      "pattern": "checkethereumw|window\\.ethereum\\.(request|send|sendAsync)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects the main malicious function that hooks into Ethereum wallets",
+      "attack": "qixAttack"
+    },
+    {
+      "name": "Crypto Address Replacement",
+      "pattern": "0x[a-fA-F0-9]{40}",
+      "flags": "g",
+      "severity": "HIGH",
+      "description": "Detects hardcoded malicious Ethereum address used for fund theft",
+      "attack": "qixAttack"
+    },
+    {
+      "name": "WebSocket Data Exfiltration",
+      "pattern": "new\\s+WebSocket\\s*\\(\\s*['\"`][^'\"`]*['\"`]\\s*\\)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects malicious WebSocket endpoint for data exfiltration",
+      "attack": "qixAttack"
+    },
+    {
+      "name": "Fake NPM Domain",
+      "pattern": "npmjs\\.help|npmjs\\.org\\.help",
+      "flags": "gi",
+      "severity": "MEDIUM",
+      "description": "Detects fake NPM domain used in phishing attacks",
+      "attack": "qixAttack"
+    },
+    {
+      "name": "Fetch/XMLHttpRequest Override",
+      "pattern": "(window\\.fetch\\s*=|XMLHttpRequest\\.prototype\\.(open|send)\\s*=)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects malicious override of network request functions",
+      "attack": "qixAttack"
+    },
+    {
+      "name": "Malicious Network Interception",
+      "pattern": "(originalFetch|originalOpen|originalSend).*\\.(fetch|XMLHttpRequest).*replace",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects malicious network request interception patterns",
+      "attack": "qixAttack"
+    },
+    {
+      "name": "Levenshtein Distance Calculation",
+      "pattern": "levenshtein.*distance.*address|address.*levenshtein.*distance.*replace",
+      "flags": "gi",
+      "severity": "LOW",
+      "description": "Detects potential address similarity calculation for replacement",
+      "attack": "qixAttack"
+    },
+    {
+      "name": "CDN Malware Hosting",
+      "pattern": "(static-mw-host\\.b-cdn\\.net|cdn\\.jsdelivr\\.net\\/npm\\/[^/]+\\/dist)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects malicious CDN domains used for hosting malware",
+      "attack": "qixAttack"
+    },
+    {
+      "name": "Malicious Bundle.js Content",
+      "pattern": "bundle\\.js.*?(?:trufflehog|webhook\\.site|execSync.*trufflehog|process\\.env\\.(?:GITHUB_TOKEN|NPM_TOKEN|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY)|169\\.254\\.169\\.254|metadata\\.google\\.internal)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects bundle.js files containing malicious content like TruffleHog execution, webhook exfiltration, or credential theft",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "Tinycolor Attack Bundle.js Structure",
+      "pattern": "(?:function\\s+trufflehogUrl\\(\\)|function\\s+runScanner\\(|const\\s*imdsV4\\s*=\\s*['\"]http:\\/\\/169\\.254\\.169\\.254['\"]|const\\s*webhookUrl\\s*=\\s*['\"]https:\\/\\/webhook\\.site\\/|execSync.*trufflehog|trufflehog.*execSync)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects the specific malicious bundle.js structure from the tinycolor attack with TruffleHog execution and credential theft",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "TruffleHog Binary Download",
+      "pattern": "trufflehog.*\\.(zip|tar\\.gz)|github\\.com\\/trufflesecurity\\/trufflehog\\/releases\\/download",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects TruffleHog binary downloads used for credential scanning",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "Webhook Exfiltration Endpoint",
+      "pattern": "webhook\\.site\\/[a-f0-9-]+|hxxps?:\\/\\/webhook\\[\\.\\]site",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects webhook.site endpoints used for data exfiltration",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "Cloud Metadata Discovery",
+      "pattern": "169\\.254\\.169\\.254|metadata\\.google\\.internal|fd00:ec2::254",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects cloud metadata endpoint access for credential theft",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "GitHub Actions Workflow Creation",
+      "pattern": "\\.github\\/workflows\\/.*\\.yml|shai-hulud-workflow",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects suspicious GitHub Actions workflow creation",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "Environment Variable Theft",
+      "pattern": "process\\.env\\.(GITHUB_TOKEN|NPM_TOKEN|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects access to sensitive environment variables",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "NPM Token Validation",
+      "pattern": "registry\\.npmjs\\.org\\/-\\/whoami|Authorization.*Bearer.*NPM_TOKEN",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects NPM token validation attempts",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "GitHub API Token Usage",
+      "pattern": "api\\.github\\.com\\/user.*Authorization.*token.*GITHUB_TOKEN",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects GitHub API token usage for credential validation",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "Base64 Data Exfiltration",
+      "pattern": "base64.*-w0.*curl.*-s.*-X.*POST",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects base64 encoding and curl POST for data exfiltration",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "ExecSync Command Execution",
+      "pattern": "execSync.*trufflehog.*filesystem",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects execSync calls to TruffleHog filesystem scanner",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "Suspicious File Creation",
+      "pattern": "findings\\.json|\\.github\\/workflows\\/.*\\.yml",
+      "flags": "gi",
+      "severity": "MEDIUM",
+      "description": "Detects creation of suspicious files for data collection",
+      "attack": "tinycolorAttack"
+    }
+  ]
+}

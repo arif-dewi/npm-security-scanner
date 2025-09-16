@@ -53,6 +53,7 @@ class WorkerScanner {
         this.logger.debug('  🔍 Scanning JavaScript files for malicious patterns...');
         const jsResults = await this.patternMatcher.scanJavaScriptFiles(projectPath, this.iocs, path.basename(projectPath), false, projectPath);
         results.maliciousCode.push(...(jsResults.issues || []));
+        results.filesScanned = (results.filesScanned || 0) + (jsResults.filesScanned || 0);
         if (jsResults.issues && jsResults.issues.length > 0) {
           this.logger.debug(`  ⚠️  Found ${jsResults.issues.length} malicious code patterns`);
         }
@@ -72,7 +73,7 @@ class WorkerScanner {
 
       // Calculate summary for this project
       results.summary = {
-        filesScanned: 0, // Will be calculated by pattern matcher
+        filesScanned: results.filesScanned || 0,
         packagesChecked,
         issuesFound: totalIssues,
         duration: 0

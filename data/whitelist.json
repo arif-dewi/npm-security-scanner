@@ -1,0 +1,175 @@
+{
+  "libraries": [
+    {
+      "name": "jspdf",
+      "description": "jspdf polyfill files that legitimately override fetch/XMLHttpRequest",
+      "patterns": [
+        "node_modules/jspdf/dist/polyfills.(umd|es).js$"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of jspdf are legitimate"
+      }
+    },
+    {
+      "name": "html2canvas",
+      "description": "html2canvas files that legitimately override fetch/XMLHttpRequest",
+      "patterns": [
+        "node_modules/html2canvas/dist/html2canvas.(js|esm).js$",
+        "node_modules/html2canvas/dist/lib/core/features.js$",
+        "node_modules/html2canvas/dist/html2canvas.js$"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of html2canvas are legitimate"
+      }
+    },
+    {
+      "name": "@sentry-internal/browser-utils",
+      "description": "Sentry browser utils that legitimately override fetch/XMLHttpRequest",
+      "patterns": [
+        "node_modules/@sentry-internal/browser-utils/build/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Sentry browser utils are legitimate"
+      }
+    },
+    {
+      "name": "react-git-info",
+      "description": "React GitInfo macro that legitimately uses execSync for git operations",
+      "patterns": [
+        "node_modules/react-git-info/src/GitInfo.macro.js$"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of react-git-info are legitimate"
+      }
+    },
+    {
+      "name": "pino",
+      "description": "Pino benchmark utilities that legitimately use execSync",
+      "patterns": [
+        "node_modules/pino/benchmarks/utils/generate-benchmark-doc.js$"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of pino are legitimate"
+      }
+    },
+    {
+      "name": "webpack",
+      "description": "Webpack bundle files that legitimately create bundle.js",
+      "patterns": [
+        "webpack.*bundle.js$",
+        "node_modules/webpack/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of webpack are legitimate"
+      }
+    },
+    {
+      "name": "rollup",
+      "description": "Rollup bundle files that legitimately create bundle.js",
+      "patterns": [
+        "rollup.*bundle.js$",
+        "node_modules/rollup/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of rollup are legitimate"
+      }
+    },
+    {
+      "name": "vite",
+      "description": "Vite bundle files that legitimately create bundle.js",
+      "patterns": [
+        "vite.*bundle.js$",
+        "node_modules/vite/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of vite are legitimate"
+      }
+    },
+    {
+      "name": "parcel",
+      "description": "Parcel bundle files that legitimately create bundle.js",
+      "patterns": [
+        "parcel.*bundle.js$",
+        "node_modules/parcel/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of parcel are legitimate"
+      }
+    },
+    {
+      "name": "@babel/polyfill",
+      "description": "Babel polyfills that legitimately override native functions",
+      "patterns": [
+        "node_modules/@babel/polyfill/",
+        "node_modules/core-js/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Babel polyfills are legitimate"
+      }
+    },
+    {
+      "name": "polyfill-libraries",
+      "description": "Known polyfill libraries that legitimately override fetch",
+      "patterns": [
+        "node_modules/(whatwg-fetch|unfetch|isomorphic-fetch|es6-promise)/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of these polyfill libraries are legitimate"
+      }
+    },
+    {
+      "name": "testing-frameworks",
+      "description": "Testing frameworks that may legitimately override network functions",
+      "patterns": [
+        "node_modules/(jest|mocha|jasmine|karma|cypress)/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of these testing frameworks are legitimate"
+      }
+    },
+    {
+      "name": "build-tools",
+      "description": "Build tools that may legitimately create bundle files",
+      "patterns": [
+        "node_modules/(webpack|rollup|vite|parcel|esbuild|swc)/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of these build tools are legitimate"
+      }
+    },
+    {
+      "name": "dev-tools",
+      "description": "Development tools that may legitimately use execSync",
+      "patterns": [
+        "node_modules/(nodemon|concurrently|cross-env|rimraf)/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of these dev tools are legitimate"
+      }
+    }
+  ],
+  "versionChecks": {
+    "enabled": true,
+    "packageJsonPath": "package.json",
+    "fallbackToAllVersions": true
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2025-09-16",
+    "description": "Whitelist patterns for known legitimate libraries to reduce false positives in security scanning"
+  }
+}

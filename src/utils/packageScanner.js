@@ -21,32 +21,33 @@ class PackageScanner {
    * @private
    */
   initializeVulnerableVersions() {
-    // QIX supply chain attack (Sept 2025) - confirmed malicious versions
-    // Source: https://www.endorlabs.com/learn/major-supply-chain-attack-compromises-popular-npm-packages-including-chalk-and-debug
-    // Attack: Account takeover of 'qix' publisher via phishing (support@npmjs[.]help)
-    // Malware: checkethereumw function + crypto address replacement to 0xFc4a4858bafef54D1b1d7697bfb5c52F4c166976
-    // Impact: 18 packages, hundreds of millions of weekly downloads
-    return {
-      backslash: ['0.2.1'],
-      chalk: ['5.6.1'],
-      'chalk-template': ['1.1.1'],
-      'color-convert': ['3.1.1'],
-      'color-name': ['2.0.1'],
-      'color-string': ['2.1.1'],
-      'wrap-ansi': ['9.0.1'],
-      'supports-hyperlinks': ['4.1.1'],
-      'strip-ansi': ['7.1.1'],
-      'slice-ansi': ['7.1.1'],
-      'simple-swizzle': ['0.2.3'],
-      'is-arrayish': ['0.3.3'],
-      'error-ex': ['1.3.3'],
-      'has-ansi': ['6.0.1'],
-      'ansi-regex': ['6.2.1'],
-      'ansi-styles': ['6.2.2'],
-      'supports-color': ['10.2.1'],
-      'proto-tinker-wc': ['1.8.7'],
-      debug: ['4.4.2']
-    };
+    try {
+      // Load QIX attack data
+      const qixPath = path.join(__dirname, '..', '..', 'data', 'qix-attack.json');
+      const qixData = JSON.parse(fs.readFileSync(qixPath, 'utf8'));
+
+      // Load Tinycolor attack data
+      const tinycolorPath = path.join(__dirname, '..', '..', 'data', 'tinycolor-attack.json');
+      const tinycolorData = JSON.parse(fs.readFileSync(tinycolorPath, 'utf8'));
+
+      // Merge both attack databases
+      const vulnerableVersions = {
+        ...qixData.vulnerableVersions,
+        ...tinycolorData.vulnerableVersions
+      };
+
+      this.logger.debug('Vulnerable versions loaded from data files', {
+        qixPackages: Object.keys(qixData.vulnerableVersions).length,
+        tinycolorPackages: Object.keys(tinycolorData.vulnerableVersions).length,
+        totalPackages: Object.keys(vulnerableVersions).length
+      });
+
+      return vulnerableVersions;
+    } catch (error) {
+      this.logger.error('Failed to load vulnerable versions from data files', error);
+      // Fallback to empty object if data files can't be loaded
+      return {};
+    }
   }
 
   /**
@@ -55,29 +56,33 @@ class PackageScanner {
    * @private
    */
   initializeSafeVersions() {
-    // Safe versions published before the QIX compromise (Sept 2025)
-    // These are the last known good versions before the attack
-    return {
-      backslash: ['0.2.0'], // Last safe version before 0.2.1
-      chalk: ['5.6.0'], // Last safe version before 5.6.1
-      'chalk-template': ['1.1.0'], // Last safe version before 1.1.1
-      'color-convert': ['3.1.0'], // Last safe version before 3.1.1
-      'color-name': ['2.0.0'], // Last safe version before 2.0.1
-      'color-string': ['2.1.0'], // Last safe version before 2.1.1
-      'wrap-ansi': ['9.0.0'], // Last safe version before 9.0.1
-      'supports-hyperlinks': ['4.1.0'], // Last safe version before 4.1.1
-      'strip-ansi': ['7.1.0'], // Last safe version before 7.1.1
-      'slice-ansi': ['7.1.0'], // Last safe version before 7.1.1
-      'simple-swizzle': ['0.2.2'], // Last safe version before 0.2.3
-      'is-arrayish': ['0.3.2'], // Last safe version before 0.3.3
-      'error-ex': ['1.3.2'], // Last safe version before 1.3.3
-      'has-ansi': ['6.0.0'], // Last safe version before 6.0.1
-      'ansi-regex': ['6.2.0'], // Last safe version before 6.2.1
-      'ansi-styles': ['6.2.1'], // Last safe version before 6.2.2
-      'supports-color': ['10.2.0'], // Last safe version before 10.2.1
-      'proto-tinker-wc': ['1.8.6'], // Last safe version before 1.8.7
-      debug: ['4.4.1'] // Last safe version before 4.4.2
-    };
+    try {
+      // Load QIX attack data
+      const qixPath = path.join(__dirname, '..', '..', 'data', 'qix-attack.json');
+      const qixData = JSON.parse(fs.readFileSync(qixPath, 'utf8'));
+
+      // Load Tinycolor attack data
+      const tinycolorPath = path.join(__dirname, '..', '..', 'data', 'tinycolor-attack.json');
+      const tinycolorData = JSON.parse(fs.readFileSync(tinycolorPath, 'utf8'));
+
+      // Merge both safe version databases
+      const safeVersions = {
+        ...qixData.safeVersions,
+        ...tinycolorData.safeVersions
+      };
+
+      this.logger.debug('Safe versions loaded from data files', {
+        qixPackages: Object.keys(qixData.safeVersions).length,
+        tinycolorPackages: Object.keys(tinycolorData.safeVersions).length,
+        totalPackages: Object.keys(safeVersions).length
+      });
+
+      return safeVersions;
+    } catch (error) {
+      this.logger.error('Failed to load safe versions from data files', error);
+      // Fallback to empty object if data files can't be loaded
+      return {};
+    }
   }
 
   /**

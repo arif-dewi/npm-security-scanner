@@ -125,8 +125,9 @@ class NPMSecurityScanner {
       }
     };
 
-    // Track total packages checked across all projects
+    // Track total packages checked and files scanned across all projects
     this.totalPackagesChecked = 0;
+    this.totalFilesScanned = 0;
 
     // Load security indicators
     this.loadIoCs();
@@ -312,7 +313,8 @@ class NPMSecurityScanner {
         validation.warnings.forEach(warning => this.logger.warn(warning));
       }
 
-      this.logger.info('🔍 NPM Security Scanner - QIX Supply Chain Attack Detection');
+      this.logger.info('🔍 NPM Security Scanner - Supply Chain Attack Detection');
+      this.logger.info('Detecting: QIX Attack, Tinycolor Attack, and other malicious patterns');
       this.logger.info(`Scanning directory: ${targetDir}`);
 
       // Step 2: Discover projects
@@ -632,9 +634,17 @@ class NPMSecurityScanner {
     this.results.suspiciousFiles.push(...(projectResult.suspiciousFiles || []));
     this.results.packageValidationIssues.push(...(projectResult.packageValidationIssues || []));
 
-    // Track total packages checked from this project
+    // Track total packages checked and files scanned from this project
     if (projectResult.summary && projectResult.summary.packagesChecked) {
       this.totalPackagesChecked += projectResult.summary.packagesChecked;
+    }
+    if (projectResult.summary && projectResult.summary.filesScanned) {
+      this.totalFilesScanned += projectResult.summary.filesScanned;
+      this.logger.debug('Accumulating files scanned', {
+        project: projectResult.project,
+        filesScanned: projectResult.summary.filesScanned,
+        totalFilesScanned: this.totalFilesScanned
+      });
     }
   }
 
@@ -719,7 +729,8 @@ class NPMSecurityScanner {
    * @private
    */
   calculateSummary() {
-    this.results.summary.filesScanned = this.results.maliciousCode.length + this.results.suspiciousFiles.length;
+    // Use aggregated totals from all projects
+    this.results.summary.filesScanned = this.totalFilesScanned;
     this.results.summary.packagesChecked = this.totalPackagesChecked;
     this.results.summary.issuesFound =
       this.results.compromisedPackages.length +

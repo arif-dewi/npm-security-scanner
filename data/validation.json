@@ -1,0 +1,42 @@
+{
+  "logLevels": [
+    "error",
+    "warn", 
+    "info",
+    "debug",
+    "trace"
+  ],
+  "outputFormats": [
+    "console",
+    "json",
+    "markdown",
+    "both"
+  ],
+  "suspiciousFileExtensions": [
+    ".exe",
+    ".bat",
+    ".cmd",
+    ".scr",
+    ".pif",
+    ".com"
+  ],
+  "suspiciousPackageJsonFields": [
+    "scripts",
+    "bin",
+    "preinstall",
+    "postinstall"
+  ],
+  "ignorePatterns": [
+    "coverage/**",
+    "dist/**",
+    "build/**",
+    "dev-dist/**"
+  ],
+  "fileSizeUnits": [
+    "B",
+    "KB",
+    "MB",
+    "GB",
+    "TB"
+  ]
+}

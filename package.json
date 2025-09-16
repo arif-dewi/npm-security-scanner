@@ -1,6 +1,6 @@
 {
   "name": "npm-security-scanner",
-  "version": "1.0.0",
+  "version": "2.2.0",
   "description": "Security scanner for detecting compromised npm packages and malicious code patterns",
   "main": "src/scanner/index.js",
   "scripts": {

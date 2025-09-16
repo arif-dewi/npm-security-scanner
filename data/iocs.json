@@ -257,6 +257,34 @@
   "ipAddresses": [
     "185.7.81.108"
   ],
+  "webhookEndpoints": [
+    "hxxps://webhook[.]site/bb8ca5f6-4175-45d2-b042-fc9ebb8170b7",
+    "webhook.site/bb8ca5f6-4175-45d2-b042-fc9ebb8170b7"
+  ],
+  "cloudMetadataEndpoints": [
+    "http://169.254.169.254",
+    "http://[fd00:ec2::254]",
+    "http://metadata.google.internal"
+  ],
+  "truffleHogUrls": [
+    "github.com/trufflesecurity/trufflehog/releases/download",
+    "trufflehog_windows_x86_64.zip",
+    "trufflehog_linux_x86_64.tar.gz",
+    "trufflehog_darwin_all.tar.gz"
+  ],
+  "maliciousBundleHashes": [
+    "46faab8ab153fae6e80e7cca38eab363075bb524edd79e42269217a083628f09"
+  ],
+  "suspiciousWorkflowNames": [
+    "shai-hulud-workflow.yml",
+    "workflow.yml"
+  ],
+  "environmentVariables": [
+    "GITHUB_TOKEN",
+    "NPM_TOKEN", 
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY"
+  ],
   "specialAddresses": {
     "ethereum": "0xFc4a4858bafef54D1b1d7697bfb5c52F4c166976",
     "solana": "19111111111111111111111111111111"
