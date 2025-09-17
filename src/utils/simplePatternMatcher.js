@@ -67,7 +67,6 @@ class SimplePatternMatcher {
 
   scanFile(filePath, content) {
     const results = [];
-    
     // Skip whitelisted files
     if (this.isWhitelisted(filePath)) {
       return results;
@@ -92,13 +91,12 @@ class SimplePatternMatcher {
   getLineNumbers(content, pattern) {
     const lines = content.split('\n');
     const lineNumbers = [];
-    
     for (let i = 0; i < lines.length; i++) {
       if (pattern.test(lines[i])) {
         lineNumbers.push(i + 1);
       }
     }
-    
+
     return lineNumbers;
   }
 }
