@@ -17,7 +17,8 @@
       "patterns": [
         "node_modules/html2canvas/dist/html2canvas.(js|esm).js$",
         "node_modules/html2canvas/dist/lib/core/features.js$",
-        "node_modules/html2canvas/dist/html2canvas.js$"
+        "node_modules/html2canvas/dist/html2canvas.js$",
+        "node_modules/html2canvas/dist/html2canvas.min.js$"
       ],
       "versions": {
         "all": true,
@@ -159,6 +160,569 @@
       "versions": {
         "all": true,
         "notes": "All versions of these dev tools are legitimate"
+      }
+    },
+    {
+      "name": "antd",
+      "description": "Ant Design React UI library that legitimately uses process.env and platform detection",
+      "patterns": [
+        "node_modules/antd/",
+        "node_modules/@ant-design/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Ant Design are legitimate"
+      }
+    },
+    {
+      "name": "storybook",
+      "description": "Storybook development tool that legitimately uses process.env and platform detection",
+      "patterns": [
+        "node_modules/@storybook/",
+        "node_modules/storybook/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Storybook are legitimate"
+      }
+    },
+    {
+      "name": "nextjs",
+      "description": "Next.js React framework that legitimately uses process.env and platform detection",
+      "patterns": [
+        "node_modules/next/",
+        "node_modules/@next/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Next.js are legitimate"
+      }
+    },
+    {
+      "name": "typescript",
+      "description": "TypeScript compiler that legitimately uses platform detection",
+      "patterns": [
+        "node_modules/typescript/",
+        "node_modules/@typescript/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of TypeScript are legitimate"
+      }
+    },
+    {
+      "name": "testing-library",
+      "description": "Testing Library that legitimately uses process.env and base64 encoding",
+      "patterns": [
+        "node_modules/@testing-library/",
+        "node_modules/testing-library/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Testing Library are legitimate"
+      }
+    },
+    {
+      "name": "redux-persist",
+      "description": "Redux Persist that legitimately uses process.env for state management",
+      "patterns": [
+        "node_modules/redux-persist/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Redux Persist are legitimate"
+      }
+    },
+    {
+      "name": "sentry",
+      "description": "Sentry error monitoring that legitimately uses process.env and platform detection",
+      "patterns": [
+        "node_modules/@sentry/",
+        "node_modules/sentry/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Sentry are legitimate"
+      }
+    },
+    {
+      "name": "vitest",
+      "description": "Vitest testing framework that legitimately uses platform detection",
+      "patterns": [
+        "node_modules/vitest/",
+        "node_modules/@vitest/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Vitest are legitimate"
+      }
+    },
+    {
+      "name": "ajv",
+      "description": "AJV JSON schema validator that legitimately uses process.env",
+      "patterns": [
+        "node_modules/ajv/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of AJV are legitimate"
+      }
+    },
+    {
+      "name": "sharp",
+      "description": "Sharp image processing library that legitimately uses platform detection",
+      "patterns": [
+        "node_modules/sharp/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Sharp are legitimate"
+      }
+    },
+    {
+      "name": "resolve",
+      "description": "Resolve module resolution library that legitimately uses platform detection",
+      "patterns": [
+        "node_modules/resolve/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Resolve are legitimate"
+      }
+    },
+    {
+      "name": "type-fest",
+      "description": "TypeFest TypeScript utilities that legitimately reference npm patterns",
+      "patterns": [
+        "node_modules/type-fest/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of TypeFest are legitimate"
+      }
+    },
+    {
+      "name": "axe-core",
+      "description": "Axe accessibility testing library that legitimately uses process.env",
+      "patterns": [
+        "node_modules/axe-core/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Axe Core are legitimate"
+      }
+    },
+    {
+      "name": "fsevents",
+      "description": "FSEvents file system watcher that legitimately uses platform detection",
+      "patterns": [
+        "node_modules/fsevents/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of FSEvents are legitimate"
+      }
+    },
+    {
+      "name": "sass-embedded",
+      "description": "Sass embedded compiler that legitimately uses platform detection",
+      "patterns": [
+        "node_modules/sass-embedded/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Sass Embedded are legitimate"
+      }
+    },
+    {
+      "name": "istanbul-reports",
+      "description": "Istanbul code coverage reports that legitimately use base64 encoding",
+      "patterns": [
+        "node_modules/istanbul-reports/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Istanbul Reports are legitimate"
+      }
+    },
+    {
+      "name": "update-browserslist-db",
+      "description": "Browserslist database updater that legitimately uses npm patterns",
+      "patterns": [
+        "node_modules/update-browserslist-db/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of update-browserslist-db are legitimate"
+      }
+    },
+    {
+      "name": "unrs-resolver",
+      "description": "UNRS module resolver that legitimately uses platform detection",
+      "patterns": [
+        "node_modules/unrs-resolver/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of UNRS Resolver are legitimate"
+      }
+    },
+    {
+      "name": "is-wsl",
+      "description": "WSL detection library that legitimately uses platform detection",
+      "patterns": [
+        "node_modules/is-wsl/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of is-wsl are legitimate"
+      }
+    },
+    {
+      "name": "babel-packages",
+      "description": "Babel packages that legitimately use process.env and platform detection",
+      "patterns": [
+        "node_modules/@babel/",
+        "node_modules/babel/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Babel packages are legitimate"
+      }
+    },
+    {
+      "name": "vercel-nft",
+      "description": "Vercel Node File Trace that legitimately uses process.env and platform detection",
+      "patterns": [
+        "node_modules/@vercel/nft/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Vercel NFT are legitimate"
+      }
+    },
+    {
+      "name": "msw",
+      "description": "Mock Service Worker that legitimately uses process.env",
+      "patterns": [
+        "node_modules/@mswjs/",
+        "node_modules/msw/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of MSW are legitimate"
+      }
+    },
+    {
+      "name": "amphtml-validator",
+      "description": "AMP HTML validator that legitimately uses platform detection",
+      "patterns": [
+        "node_modules/amphtml-validator/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of AMP HTML Validator are legitimate"
+      }
+    },
+    {
+      "name": "cssnano",
+      "description": "CSSnano CSS minifier that legitimately uses process.env",
+      "patterns": [
+        "node_modules/cssnano/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of CSSnano are legitimate"
+      }
+    },
+    {
+      "name": "debug",
+      "description": "Debug logging library that legitimately uses process.env",
+      "patterns": [
+        "node_modules/debug/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Debug are legitimate"
+      }
+    },
+    {
+      "name": "cross-spawn",
+      "description": "Cross-platform process spawning that legitimately uses platform detection",
+      "patterns": [
+        "node_modules/cross-spawn/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Cross Spawn are legitimate"
+      }
+    },
+    {
+      "name": "crypto-browserify",
+      "description": "Crypto browserify polyfill that legitimately uses process.env",
+      "patterns": [
+        "node_modules/crypto-browserify/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Crypto Browserify are legitimate"
+      }
+    },
+    {
+      "name": "conf",
+      "description": "Configuration library that legitimately uses process.env and platform detection",
+      "patterns": [
+        "node_modules/conf/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Conf are legitimate"
+      }
+    },
+    {
+      "name": "cli-select",
+      "description": "CLI selection library that legitimately uses process.env",
+      "patterns": [
+        "node_modules/cli-select/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of CLI Select are legitimate"
+      }
+    },
+    {
+      "name": "ci-info",
+      "description": "CI environment detection that legitimately uses process.env",
+      "patterns": [
+        "node_modules/ci-info/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of CI Info are legitimate"
+      }
+    },
+    {
+      "name": "browserslist",
+      "description": "Browserslist that legitimately uses process.env",
+      "patterns": [
+        "node_modules/browserslist/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Browserslist are legitimate"
+      }
+    },
+    {
+      "name": "glob",
+      "description": "Glob file pattern matching that legitimately uses process.env",
+      "patterns": [
+        "node_modules/glob/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Glob are legitimate"
+      }
+    },
+    {
+      "name": "assert",
+      "description": "Assert library that legitimately uses process.env",
+      "patterns": [
+        "node_modules/assert/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Assert are legitimate"
+      }
+    },
+    {
+      "name": "type-fest",
+      "description": "TypeFest TypeScript utilities that legitimately reference npm patterns",
+      "patterns": [
+        "node_modules/type-fest/",
+        "node_modules/*/node_modules/type-fest/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of TypeFest are legitimate"
+      }
+    },
+    {
+      "name": "fastify",
+      "description": "Fastify web framework that legitimately uses AWS patterns",
+      "patterns": [
+        "node_modules/@fastify/",
+        "node_modules/fastify/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Fastify are legitimate"
+      }
+    },
+    {
+      "name": "terser",
+      "description": "Terser JavaScript minifier that legitimately uses GCP patterns",
+      "patterns": [
+        "node_modules/terser/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Terser are legitimate"
+      }
+    },
+    {
+      "name": "multicast-dns",
+      "description": "Multicast DNS library that legitimately uses platform detection",
+      "patterns": [
+        "node_modules/multicast-dns/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Multicast DNS are legitimate"
+      }
+    },
+    {
+      "name": "jiti",
+      "description": "JIT compiler that legitimately uses process.env and base64",
+      "patterns": [
+        "node_modules/jiti/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of JITI are legitimate"
+      }
+    },
+    {
+      "name": "immer",
+      "description": "Immer state management that legitimately uses process.env",
+      "patterns": [
+        "node_modules/immer/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Immer are legitimate"
+      }
+    },
+    {
+      "name": "core-js",
+      "description": "Core-js polyfills that legitimately use base64 encoding",
+      "patterns": [
+        "node_modules/core-js/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Core-js are legitimate"
+      }
+    },
+    {
+      "name": "customize-cra",
+      "description": "Customize CRA that legitimately uses process.env",
+      "patterns": [
+        "node_modules/customize-cra/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Customize CRA are legitimate"
+      }
+    },
+    {
+      "name": "jake",
+      "description": "Jake build tool that legitimately uses npm patterns",
+      "patterns": [
+        "node_modules/jake/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Jake are legitimate"
+      }
+    },
+    {
+      "name": "tempy",
+      "description": "Tempy temporary file utility that legitimately uses npm patterns",
+      "patterns": [
+        "node_modules/tempy/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Tempy are legitimate"
+      }
+    },
+    {
+      "name": "eslint",
+      "description": "ESLint that legitimately uses npm patterns",
+      "patterns": [
+        "node_modules/eslint/",
+        "node_modules/@eslint/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of ESLint are legitimate"
+      }
+    },
+    {
+      "name": "ansi-escapes",
+      "description": "ANSI escapes library that legitimately uses npm patterns",
+      "patterns": [
+        "node_modules/ansi-escapes/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of ANSI escapes are legitimate"
+      }
+    },
+    {
+      "name": "load-json-file",
+      "description": "Load JSON file utility that legitimately uses npm patterns",
+      "patterns": [
+        "node_modules/load-json-file/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Load JSON File are legitimate"
+      }
+    },
+    {
+      "name": "postcss-svgo",
+      "description": "PostCSS SVGO that legitimately uses base64 encoding",
+      "patterns": [
+        "node_modules/postcss-svgo/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of PostCSS SVGO are legitimate"
+      }
+    },
+    {
+      "name": "typescript-definition-files",
+      "description": "TypeScript definition files that legitimately reference npm patterns",
+      "patterns": [
+        "\\.d\\.ts$",
+        "\\.test-d\\.ts$"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All TypeScript definition files are legitimate"
+      }
+    },
+    {
+      "name": "styled-components",
+      "description": "Styled Components React library that legitimately uses process.env",
+      "patterns": [
+        "node_modules/styled-components/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of Styled Components are legitimate"
+      }
+    },
+    {
+      "name": "react-error-overlay",
+      "description": "React Error Overlay that legitimately uses base64 encoding for error display",
+      "patterns": [
+        "node_modules/react-error-overlay/"
+      ],
+      "versions": {
+        "all": true,
+        "notes": "All versions of React Error Overlay are legitimate"
       }
     }
   ],

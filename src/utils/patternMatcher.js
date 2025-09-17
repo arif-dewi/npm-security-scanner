@@ -137,6 +137,60 @@ class PatternMatcher {
         pattern: /findings\.json|\.github\/workflows\/.*\.yml/gi,
         severity: 'MEDIUM',
         description: 'Detects creation of suspicious files for data collection'
+      },
+      {
+        name: 'Webpack Bundle Malware Detection',
+        pattern: /(?:webpackChunkName|webpackJsonp|__webpack_require__).*?(?:trufflehog|webhook\.site|process\.env\.(?:GITHUB_TOKEN|NPM_TOKEN|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY)|169\.254\.169\.254|metadata\.google\.internal)/gi,
+        severity: 'HIGH',
+        description: 'Detects malicious content within Webpack-bundled JavaScript files'
+      },
+      {
+        name: 'NPM Self-Propagation Pattern',
+        pattern: /(?:updatePackage.*npm.*publish.*shai-hulud|npm\s+publish.*updatePackage.*shai-hulud|npm\s+version\s+patch.*updatePackage.*shai-hulud)/gi,
+        severity: 'HIGH',
+        description: 'Detects NPM package self-propagation mechanisms used in supply chain attacks'
+      },
+      {
+        name: 'GitHub API Abuse Pattern',
+        pattern: /(?:shai-hulud.*branch|force.*merge.*shai-hulud|refs\/heads\/shai-hulud|api\.github\.com.*repos.*shai-hulud|github\.com.*git.*refs.*shai-hulud)/gi,
+        severity: 'HIGH',
+        description: 'Detects GitHub API abuse for creating malicious branches and workflows'
+      },
+      {
+        name: 'AWS Secrets Manager Enumeration',
+        pattern: /(?:@aws-sdk\/client-secrets-manager.*ListSecretsCommand.*webhook|ListSecretsCommand.*GetSecretValueCommand.*webhook|GetSecretValueCommand.*BatchGetSecretValue.*webhook)/gi,
+        severity: 'HIGH',
+        description: 'Detects AWS Secrets Manager enumeration and credential theft'
+      },
+      {
+        name: 'GCP Secret Manager Enumeration',
+        pattern: /(?:@google-cloud\/secret-manager.*projects.*secrets.*webhook|projects.*secrets.*nextPageToken.*webhook|nextPageToken.*PERMISSION_DENIED.*webhook)/gi,
+        severity: 'HIGH',
+        description: 'Detects Google Cloud Secret Manager enumeration and credential theft'
+      },
+      {
+        name: 'Process Environment Dumping',
+        pattern: /(?:process\.env.*Object\.keys.*JSON\.stringify.*webhook|Object\.entries.*process\.env.*JSON\.stringify.*webhook|JSON\.stringify.*process\.env.*Object\.keys.*webhook)/gi,
+        severity: 'HIGH',
+        description: 'Detects comprehensive process environment variable dumping for credential theft'
+      },
+      {
+        name: 'Malicious Postinstall Script',
+        pattern: /(?:postinstall.*bundle\.js|postinstall.*trufflehog|postinstall.*webhook|scripts.*postinstall.*node.*bundle)/gi,
+        severity: 'HIGH',
+        description: 'Detects malicious postinstall scripts that execute bundle.js or other malware'
+      },
+      {
+        name: 'Double Base64 Encoding Evasion',
+        pattern: /(?:base64.*-w0.*base64.*-w0|base64.*base64.*curl|double.*base64.*encode)/gi,
+        severity: 'HIGH',
+        description: 'Detects double base64 encoding used for evasion in data exfiltration'
+      },
+      {
+        name: 'OS Platform Detection for Targeting',
+        pattern: /(?:os\.platform.*linux.*darwin.*trufflehog|platform.*linux.*darwin.*target.*trufflehog|process\.platform.*linux.*darwin.*target.*trufflehog)/gi,
+        severity: 'MEDIUM',
+        description: 'Detects OS platform detection used to target specific operating systems'
       }
     ];
   }

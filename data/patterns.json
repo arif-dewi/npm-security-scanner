@@ -93,6 +93,78 @@
       "attack": "tinycolorAttack"
     },
     {
+      "name": "Webpack Bundle Malware Detection",
+      "pattern": "(?:webpackChunkName|webpackJsonp|__webpack_require__).*?(?:trufflehog|webhook\\.site|process\\.env\\.(?:GITHUB_TOKEN|NPM_TOKEN|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY)|169\\.254\\.169\\.254|metadata\\.google\\.internal)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects malicious content within Webpack-bundled JavaScript files",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "NPM Self-Propagation Pattern",
+      "pattern": "(?:updatePackage|npm\\s+publish|npm\\s+version\\s+patch|registry\\.npmjs\\.org.*whoami|maintainer:.*username)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects NPM package self-propagation mechanisms used in supply chain attacks",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "GitHub API Abuse Pattern",
+      "pattern": "(?:api\\.github\\.com.*repos|github\\.com.*git.*refs|shai-hulud.*branch|force.*merge|refs\\/heads\\/shai-hulud)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects GitHub API abuse for creating malicious branches and workflows",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "AWS Secrets Manager Enumeration",
+      "pattern": "(?:@aws-sdk\\/client-secrets-manager|ListSecretsCommand|GetSecretValueCommand|BatchGetSecretValue|SecretList|SecretString|SecretBinary)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects AWS Secrets Manager enumeration and credential theft",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "GCP Secret Manager Enumeration",
+      "pattern": "(?:@google-cloud\\/secret-manager|projects.*secrets|nextPageToken|PERMISSION_DENIED)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects Google Cloud Secret Manager enumeration and credential theft",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "Process Environment Dumping",
+      "pattern": "(?:process\\.env.*Object\\.keys|JSON\\.stringify.*process\\.env|Object\\.entries.*process\\.env)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects comprehensive process environment variable dumping for credential theft",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "Malicious Postinstall Script",
+      "pattern": "(?:postinstall.*bundle\\.js|postinstall.*trufflehog|postinstall.*webhook|scripts.*postinstall.*node.*bundle)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects malicious postinstall scripts that execute bundle.js or other malware",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "Double Base64 Encoding Evasion",
+      "pattern": "(?:base64.*-w0.*base64.*-w0|base64.*base64.*curl|double.*base64.*encode)",
+      "flags": "gi",
+      "severity": "HIGH",
+      "description": "Detects double base64 encoding used for evasion in data exfiltration",
+      "attack": "tinycolorAttack"
+    },
+    {
+      "name": "OS Platform Detection for Targeting",
+      "pattern": "(?:os\\.platform.*linux|os\\.platform.*darwin|platform.*linux.*darwin|process\\.platform.*linux|process\\.platform.*darwin)",
+      "flags": "gi",
+      "severity": "MEDIUM",
+      "description": "Detects OS platform detection used to target specific operating systems",
+      "attack": "tinycolorAttack"
+    },
+    {
       "name": "TruffleHog Binary Download",
       "pattern": "trufflehog.*\\.(zip|tar\\.gz)|github\\.com\\/trufflesecurity\\/trufflehog\\/releases\\/download",
       "flags": "gi",

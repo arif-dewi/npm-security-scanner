@@ -222,6 +222,23 @@ Issues found: 3          # Total security issues found
 
 ## 📋 Release Notes
 
+### v2.2.1 - False Positive Reduction & Whitelist Improvements (September 16, 2025)
+
+#### 🐛 Bug Fixes & Improvements
+- **Enhanced html2canvas Whitelist**: Added support for minified files (`html2canvas.min.js`) to prevent false positives
+- **New react-error-overlay Whitelist**: Added comprehensive whitelist for React Error Overlay library to eliminate false positives
+- **Improved Base64 Detection**: Better handling of legitimate base64 encoding in UI libraries and error handling tools
+
+#### 🎯 False Positive Reductions
+- **html2canvas.min.js**: Fixed false positive for "Double Base64 Encoding Evasion" in minified html2canvas files
+- **react-error-overlay**: Fixed false positive for "Double Base64 Encoding Evasion" in React error overlay library
+- **Legitimate Base64 Usage**: Better recognition of legitimate base64 encoding in canvas-to-image conversion and error display
+
+#### 🔧 Technical Improvements
+- **Whitelist Pattern Updates**: Enhanced regex patterns to cover minified and bundled versions of legitimate libraries
+- **Library-Specific Whitelisting**: Added targeted whitelist entries for libraries that legitimately use base64 encoding
+- **Better Pattern Matching**: Improved detection accuracy by distinguishing between malicious and legitimate base64 usage
+
 ### v2.1.0 - Tinycolor Supply Chain Attack Detection (September 16, 2025)
 
 #### 🆕 New Features

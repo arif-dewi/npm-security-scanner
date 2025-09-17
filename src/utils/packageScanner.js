@@ -30,15 +30,21 @@ class PackageScanner {
       const tinycolorPath = path.join(__dirname, '..', '..', 'data', 'tinycolor-attack.json');
       const tinycolorData = JSON.parse(fs.readFileSync(tinycolorPath, 'utf8'));
 
-      // Merge both attack databases
+      // Load comprehensive attack data (195+ packages)
+      const comprehensivePath = path.join(__dirname, '..', '..', 'data', 'comprehensive-attack.json');
+      const comprehensiveData = JSON.parse(fs.readFileSync(comprehensivePath, 'utf8'));
+
+      // Merge all attack databases
       const vulnerableVersions = {
         ...qixData.vulnerableVersions,
-        ...tinycolorData.vulnerableVersions
+        ...tinycolorData.vulnerableVersions,
+        ...comprehensiveData.vulnerableVersions
       };
 
       this.logger.debug('Vulnerable versions loaded from data files', {
         qixPackages: Object.keys(qixData.vulnerableVersions).length,
         tinycolorPackages: Object.keys(tinycolorData.vulnerableVersions).length,
+        comprehensivePackages: Object.keys(comprehensiveData.vulnerableVersions).length,
         totalPackages: Object.keys(vulnerableVersions).length
       });
 
@@ -65,15 +71,21 @@ class PackageScanner {
       const tinycolorPath = path.join(__dirname, '..', '..', 'data', 'tinycolor-attack.json');
       const tinycolorData = JSON.parse(fs.readFileSync(tinycolorPath, 'utf8'));
 
-      // Merge both safe version databases
+      // Load comprehensive attack data (195+ packages)
+      const comprehensivePath = path.join(__dirname, '..', '..', 'data', 'comprehensive-attack.json');
+      const comprehensiveData = JSON.parse(fs.readFileSync(comprehensivePath, 'utf8'));
+
+      // Merge all safe version databases
       const safeVersions = {
         ...qixData.safeVersions,
-        ...tinycolorData.safeVersions
+        ...tinycolorData.safeVersions,
+        ...comprehensiveData.safeVersions
       };
 
       this.logger.debug('Safe versions loaded from data files', {
         qixPackages: Object.keys(qixData.safeVersions).length,
         tinycolorPackages: Object.keys(tinycolorData.safeVersions).length,
+        comprehensivePackages: Object.keys(comprehensiveData.safeVersions).length,
         totalPackages: Object.keys(safeVersions).length
       });
 

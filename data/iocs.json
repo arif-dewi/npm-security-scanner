@@ -259,7 +259,8 @@
   ],
   "webhookEndpoints": [
     "hxxps://webhook[.]site/bb8ca5f6-4175-45d2-b042-fc9ebb8170b7",
-    "webhook.site/bb8ca5f6-4175-45d2-b042-fc9ebb8170b7"
+    "webhook.site/bb8ca5f6-4175-45d2-b042-fc9ebb8170b7",
+    "https://webhook.site/bb8ca5f6-4175-45d2-b042-fc9ebb8170b7"
   ],
   "cloudMetadataEndpoints": [
     "http://169.254.169.254",
@@ -283,7 +284,31 @@
     "GITHUB_TOKEN",
     "NPM_TOKEN", 
     "AWS_ACCESS_KEY_ID",
-    "AWS_SECRET_ACCESS_KEY"
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN",
+    "GOOGLE_APPLICATION_CREDENTIALS",
+    "AZURE_CLIENT_ID",
+    "AZURE_CLIENT_SECRET",
+    "AZURE_TENANT_ID"
+  ],
+  "maliciousPackageNames": [
+    "shai-hulud",
+    "bundle.js",
+    "findings.json"
+  ],
+  "suspiciousApiEndpoints": [
+    "registry.npmjs.org/-/whoami",
+    "api.github.com/user",
+    "api.github.com/user/repos",
+    "api.github.com/git/refs",
+    "api.github.com/repos",
+    "api.aws.amazon.com/secretsmanager",
+    "secretmanager.googleapis.com"
+  ],
+  "maliciousWorkflowTriggers": [
+    "on: push",
+    "on: [push]",
+    "on: workflow_dispatch"
   ],
   "specialAddresses": {
     "ethereum": "0xFc4a4858bafef54D1b1d7697bfb5c52F4c166976",

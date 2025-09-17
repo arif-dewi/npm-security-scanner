@@ -537,6 +537,8 @@ class NPMSecurityScanner {
    * console.log('Issues found:', projectResult.compromisedPackages.length);
    * ```
    */
+
+
   async scanProject(projectPath) {
     const projectTimer = this.performance.startTimer('scan-project');
 
